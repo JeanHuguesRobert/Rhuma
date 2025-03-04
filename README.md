@@ -13,9 +13,9 @@ The initial user case is in Corsica, in Corti, in a medium size green house.
 - [Requirements](docs/REQUIREMENTS.md)
 - [Methodology](docs/METHODOLOGY.md)
 - [Architecture](docs/ARCHITECTURE.md)
-- [Deployement][docs/DEPLOYEMENT.md)
+- [Deployement][(docs/DEPLOYEMENT.md)
 - [Results](docs/RESULTS)
-- [Roadmap][docs/ROADMAP.md)
+- [Roadmap](docs/ROADMAP.md)
 
 ## Web site
 
