@@ -1,5 +1,5 @@
 # Rhumba
-*Rhumba* is a tool for the optimization of production of rhum in a greenhouse with solar panels.
+*Rhuma* is a tool for the optimization of production of rhum in a greenhouse with solar panels.
 
 ## Modular model
 
@@ -16,8 +16,6 @@ The initial user case is in Corsica, in Corti, in a medium size green house.
 - [Deployement](docs/DEPLOYMENT.md)
 - [Results](docs/RESULTS.md)
 - [Roadmap](docs/ROADMAP.md)
-
-## Web site
 
 ## License
 
