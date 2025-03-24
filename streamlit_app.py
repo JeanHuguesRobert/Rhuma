@@ -21,6 +21,33 @@ efficacite_distillation = st.sidebar.slider("Efficacité distillation (%)", 70, 
 # 3. Énergie PV
 puissance_pv = st.sidebar.number_input("Puissance PV (kWc)", 100, 500, 300)
 tarif_s24 = st.sidebar.number_input("Tarif S24 (€/kWh)", 0.10, 0.20, 0.13)
+peak_efficiency = st.sidebar.slider("Efficacité maximale des panneaux (%)", 15, 25, 20)
+
+# 4. Énergie solaire et heures d'ensoleillement
+def calculate_total_solar_energy(hours):
+    # 100 kWh/m² par heure d'ensoleillement
+    return hours * 100
+
+def calculate_hours_of_sunlight(energy):
+    # 100 kWh/m² par heure d'ensoleillement
+    return max(1000, min(3000, int(energy / 100)))
+
+# Initialisation des paramètres
+hours_of_sunlight_input = st.sidebar.number_input("Nombre d'heures d'ensoleillement", 1000, 3000, 1700)
+total_solar_energy = calculate_total_solar_energy(hours_of_sunlight_input)
+
+# Affichage des valeurs
+st.write(f"Nombre d'heures d'ensoleillement : {hours_of_sunlight_input:.2f}")
+st.write(f"Énergie solaire totale reçue : {total_solar_energy:.2f} kWh/m²")
+
+# Calcul de la production électrique mensuelle
+monthly_production = total_solar_energy / 12
+best_month = monthly_production * 1.2  # Assuming best month has 20% more production
+worst_month = monthly_production * 0.8  # Assuming worst month has 20% less production
+
+# Affichage des résultats
+st.write(f"Meilleur mois de production : {best_month:.2f} kWh/m²")
+st.write(f"Pire mois de production : {worst_month:.2f} kWh/m²")
 
 # Calculs de production
 def calcul_production(surface, rendement, sucre, extraction, distillation):
@@ -70,4 +97,3 @@ if st.button("💾 Exporter en CSV"):
         "Valeur": [surface_canne, rendement_canne, alcool, revenu_rhum, production_pv]
     })
     st.download_button("⬇️ Télécharger", df.to_csv(index=False), "rhum_solaire.csv", "text/csv")
-	
