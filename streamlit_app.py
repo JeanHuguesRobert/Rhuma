@@ -25,29 +25,42 @@ peak_efficiency = st.sidebar.slider("Efficacité maximale des panneaux (%)", 15,
 
 # 4. Énergie solaire et heures d'ensoleillement
 def calculate_total_solar_energy(hours):
-    # 100 kWh/m² par heure d'ensoleillement
-    return hours * 100
+    # 1.85625 kWh/m² par heure d'ensoleillement (valeur annuelle moyenne)
+    return hours * 1.85625
 
 def calculate_hours_of_sunlight(energy):
-    # 100 kWh/m² par heure d'ensoleillement
-    return max(1000, min(3000, int(energy / 100)))
+    # 1.85625 kWh/m² par heure d'ensoleillement (valeur annuelle moyenne)
+    return max(1000, min(3000, int(energy / 1.85625)))
 
 # Initialisation des paramètres
-hours_of_sunlight_input = st.sidebar.number_input("Nombre d'heures d'ensoleillement", 1000, 3000, 1700)
+hours_of_sunlight_input = st.sidebar.number_input("Nombre d'heures d'ensoleillement", 1000, 3000, 1637)  # 1637.62 heures annuelles
+
 total_solar_energy = calculate_total_solar_energy(hours_of_sunlight_input)
 
 # Affichage des valeurs
 st.write(f"Nombre d'heures d'ensoleillement : {hours_of_sunlight_input:.2f}")
 st.write(f"Énergie solaire totale reçue : {total_solar_energy:.2f} kWh/m²")
 
-# Calcul de la production électrique mensuelle
-monthly_production = total_solar_energy / 12
-best_month = monthly_production * 1.2  # Assuming best month has 20% more production
-worst_month = monthly_production * 0.8  # Assuming worst month has 20% less production
+# Production mensuelle selon PVGIS
+monthly_production = {
+    "janvier": 106.44,
+    "février": 118.02,
+    "mars": 152.77,
+    "avril": 166.63,
+    "mai": 184.76,
+    "juin": 193.52,
+    "juillet": 214.82,
+    "août": 204.68,
+    "septembre": 167.58,
+    "octobre": 142.96,
+    "novembre": 100.93,
+    "décembre": 103.13
+}
 
-# Affichage des résultats
-st.write(f"Meilleur mois de production : {best_month:.2f} kWh/m²")
-st.write(f"Pire mois de production : {worst_month:.2f} kWh/m²")
+# Affichage de la production mensuelle
+st.write("\nProduction mensuelle (kWh/m²)")
+for month, energy in monthly_production.items():
+    st.write(f"{month}: {energy:.2f} kWh/m²")
 
 # Calculs de production
 def calcul_production(surface, rendement, sucre, extraction, distillation):
