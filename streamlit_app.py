@@ -562,8 +562,7 @@ with st.spinner("🔄 Calculs en cours..."):
         labels=["Canne à sucre", "Panneaux PV", "Locaux"], 
         colors=["#4CAF50", "#FFC107", "#9E9E9E"],
         autopct='%1.1f%%', startangle=90)
-    ax.legend(loc="upper right")
-    ax.set_title("Répartition des surfaces sur 1 hectare", color="#4CAF50")
+    ax.set_title("Répartition dans la serre", color="#4CAF50")
 
     # Création du graphique des sources de CA
     fig2, ax2 = plt.subplots()
@@ -585,6 +584,9 @@ with st.spinner("🔄 Calculs en cours..."):
 
     # Affichage des graphiques
     st.pyplot(fig)
+    # Ajout d'espaces verticaux pour une meilleure lisibilité
+    st.write("")
+    st.write("")
     st.pyplot(fig2)
 
     # Dans votre script Streamlit principal, ajoutez ceci après vos sections existantes
