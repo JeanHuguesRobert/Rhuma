@@ -55,17 +55,17 @@ class TrackingSystemSimulation:
         Returns:
         - Dict avec gains et détails de performance
         """
-        # Modèle simplifié de gain de production
+        # Nouveaux gains de production basés sur les données réelles
         base_tracking_gain = {
-            "single_axis": 0.15,  # 15% de gain avec tracking monoaxe
-            "dual_axis": 0.25,    # 25% de gain avec tracking biaxe
+            "single_axis": 0.279,  # 27.9% de gain avec tracking monoaxe (par rapport à fixe)
+            "dual_axis": 0.279,    # 27.9% de gain avec tracking monoaxe (par rapport à fixe)
         }
         
-        # Bonus lié à la précision
-        precision_bonus = {
-            "low": 0.05,   # précision > 1°
-            "medium": 0.10, # précision 0.5-1°
-            "high": 0.15   # précision < 0.5°
+        # Impact de la précision sur le gain
+        precision_impact = {
+            "low": -0.05,   # précision > 1° : perte de 5%
+            "medium": -0.02, # précision 0.5-1° : perte de 2%
+            "high": 0.00    # précision < 0.5° : pas de perte
         }
         
         precision_category = (
@@ -75,15 +75,20 @@ class TrackingSystemSimulation:
         )
         
         gains = {
-            "single_axis_gain": base_tracking_gain["single_axis"] + precision_bonus[precision_category],
-            "dual_axis_gain": base_tracking_gain["dual_axis"] + precision_bonus[precision_category]
+            "single_axis_gain": max(0, base_tracking_gain["single_axis"] + precision_impact[precision_category]),
+            "dual_axis_gain": max(0, base_tracking_gain["dual_axis"] + precision_impact[precision_category])
         }
         
         # Impact de l'orientation du panneau
-        orientation_loss = panel_orientation_precision * 0.02
+        orientation_loss = panel_orientation_precision * 0.01  # 1% de perte par degré d'orientation
         
         for key in gains:
             gains[key] = max(0, gains[key] - orientation_loss)
+        
+        # Ajout des pourcentages de référence
+        gains["fixed_reference"] = 1.0
+        gains["tracking_reference"] = 1.279  # 127.9% de la production fixe
+        gains["tracking_loss"] = 0.218  # 21.8% de perte par rapport au tracking idéal
         
         return gains
     
@@ -134,8 +139,36 @@ class TrackingSystemSimulation:
         }
 
 
+def get_pv_production_data():
+    """
+    Returns PV production data based on PVGIS calculations for 500kW system
+    """
+    # Monthly production data from PVGIS (in kWh)
+    monthly_pv_production = {
+        1: 56182.35,  # January
+        2: 60184.96,  # February
+        3: 74890.22,  # March
+        4: 80076.42,  # April
+        5: 94987.89,  # May
+        6: 100008.61, # June
+        7: 108980.42, # July
+        8: 97314.88,  # August
+        9: 78784.55,  # September
+        10: 69051.25, # October
+        11: 50725.67, # November
+        12: 55914.12  # December
+    }
+    
+    # Total annual production from PVGIS
+    total_pv_production = 927101.33  # kWh
+    
+    return monthly_pv_production, total_pv_production
+
 def tracking_optimization_section(production_pv_ideal):
     st.header("🔍 Optimisation du Tracking Solaire")
+    
+    # Get PVGIS data
+    monthly_pv_production, total_pv_production = get_pv_production_data()
     
     # Initialisation du simulateur de tracking
     tracker = TrackingSystemSimulation()
@@ -173,9 +206,6 @@ def tracking_optimization_section(production_pv_ideal):
     # Simulation des performances du micro-onduleur
     microinverter_perf = tracker.simulate_microinverter_performance()
     
-    # Simulation Monte Carlo de la production
-    monte_carlo_result = tracker.monte_carlo_solar_production(production_pv_ideal)
-    
     # Création de colonnes pour afficher les résultats
     st.subheader("📊 Résultats de l'Optimisation")
     
@@ -183,74 +213,206 @@ def tracking_optimization_section(production_pv_ideal):
     
     with gains_col1:
         st.metric(
-            "Gain Tracking Monoaxe", 
-            f"{tracking_gains['single_axis_gain']*100:.1f}%",
-            help="Augmentation de production avec tracking monoaxe"
+            "Production Fixe (Référence)", 
+            f"{total_pv_production/1000:.2f} MWh",
+            help="Production de référence sans tracking"
         )
     
     with gains_col2:
         st.metric(
-            "Gain Tracking Biaxe", 
-            f"{tracking_gains['dual_axis_gain']*100:.1f}%",
-            help="Augmentation de production avec tracking biaxe"
+            "Production avec Tracking", 
+            f"{total_pv_production/1000 * (1 + tracking_gains['single_axis_gain']):.2f} MWh",
+            help="Production avec tracking monoaxe"
         )
     
     with gains_col3:
         st.metric(
-            "Efficacité Micro-onduleur", 
-            f"{microinverter_perf['conversion_efficiency']*100:.1f}%",
-            help="Efficacité de conversion du micro-onduleur"
+            "Gain Tracking", 
+            f"{tracking_gains['single_axis_gain']*100:.1f}%",
+            help="Augmentation de production par rapport à la production fixe"
         )
     
     # Section Analyse de Production
     st.subheader("📈 Analyse de Production")
     
-    prod_col1, prod_col2, prod_col3 = st.columns(3)
+    # Création du graphique des productions mensuelles
+    months = list(monthly_pv_production.keys())
+    monthly_values = list(monthly_pv_production.values())
     
-    with prod_col1:
-        st.metric(
-            "Production Moyenne", 
-            f"{monte_carlo_result['mean_production']/1000:.2f} MWh",
-            help="Production moyenne estimée par simulation Monte Carlo"
-        )
+    fig, ax = plt.subplots()
+    ax.bar(months, monthly_values, color="#4CAF50")
+    ax.set_xticks(months)
+    ax.set_xticklabels(["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"])
+    ax.set_xlabel("Mois")
+    ax.set_ylabel("Production (kWh)")
+    ax.set_title("Production PV mensuelle")
     
-    with prod_col2:
-        st.metric(
-            "Écart-type", 
-            f"{monte_carlo_result['std_deviation']/1000:.2f} MWh",
-            help="Variation de la production"
-        )
+    st.pyplot(fig)
     
-    with prod_col3:
-        st.metric(
-            "Plage Production", 
-            f"{monte_carlo_result['min_production']/1000:.2f} - {monte_carlo_result['max_production']/1000:.2f} MWh",
-            help="Fourchette de production estimée"
-        )
+    # Section des pertes
+    st.subheader("📊 Détails des Pertes")
+    
+    # Données des pertes de PVGIS
+    losses = {
+        "Angle d'incidence": -1.44,
+        "Spectre": 1.23,
+        "Température et irradiance": -9.54,
+        "Total": -18.77
+    }
+    
+    # Création du graphique des pertes
+    fig2, ax2 = plt.subplots()
+    ax2.bar(losses.keys(), losses.values(), color="#FFC107")
+    ax2.axhline(0, color="black", linewidth=0.5)
+    ax2.set_ylabel("Pourcentage de perte (%)")
+    ax2.set_title("Répartition des pertes")
+    
+    st.pyplot(fig2)
     
     # Paramètres avancés
     with st.expander("🛠️ Paramètres Techniques Avancés"):
-        st.write("### Caractéristiques du Micro-onduleur")
-        st.write(f"- Puissance max : {microinverter_perf['max_power']} W")
-        st.write(f"- Plage tension entrée : {microinverter_perf['input_voltage_range']} V")
-        st.write(f"- Tension sortie : {microinverter_perf['output_voltage']} V")
-        st.write(f"- Coefficient température : {microinverter_perf['temperature_coefficient']}%/°C")
+        st.write("### Caractéristiques du Système PV")
+        st.write(f"- Puissance installée : 500 kW")
+        st.write(f"- Technologie : c-Si")
+        st.write(f"- Perte système : 10%")
+        st.write(f"- Source de données : PVGIS (2005-2023)")
+        st.write(f"- Base de données : SARAH3")
+        st.write(f"- Base météo : ERA5")
+        st.write(f"- Altitude : 497 m")
         
-        st.write("\n### Stratégies de Tracking")
-        st.write("- **Statique** : Orientation fixe, aucun suivi")
-        st.write("- **Single-Axis** : Suivi sur un axe (est-ouest)")
-        st.write("- **Dual-Axis** : Suivi précis sur deux axes")
-        
-        st.write("\n### Impact de la Précision")
-        st.write(f"- Précision de tracking : {tracking_precision}°")
-        st.write(f"- Précision d'orientation : {panel_orientation}°")
-        st.write("- Moins de précision = Pertes de performance")
+        st.write("\n### Performance Annuelle")
+        st.write(f"- Production annuelle : {total_pv_production/1000:.2f} MWh")
+        st.write(f"- Irradiation annuelle : 2282.62 kWh/m²")
+        st.write(f"- Écart-type annuel : {39070.05/1000:.2f} MWh")
 
+
+def tracking_comparison_section(production_pv_ideal):
+    st.header("📊 Comparaison Système Fixe vs Double Axe")
+    
+    # Get PVGIS data
+    monthly_pv_production, total_pv_production = get_pv_production_data()
+    
+    # Initialisation du simulateur de tracking
+    tracker = TrackingSystemSimulation()
+    
+    # Calcul des gains de tracking pour différentes précisions
+    tracking_precisions = [0.2, 1.0, 2.0]  # Précisions en degrés
+    results = []
+    
+    for precision in tracking_precisions:
+        # Calcul des gains avec cette précision
+        tracking_gains = tracker.calculate_tracking_gains(precision, precision)
+        
+        # Production avec tracking
+        production_tracking = total_pv_production * (1 + tracking_gains['single_axis_gain'])
+        
+        # Calcul des CA
+        ca_fixe = calcul_tarif_production(total_pv_production)
+        ca_tracking = calcul_tarif_production(production_tracking)
+        
+        # Calcul des gains en CA
+        gain_ca = ((ca_tracking - ca_fixe) / ca_fixe) * 100
+        
+        results.append({
+            'precision': precision,
+            'production_tracking': production_tracking,
+            'ca_fixe': ca_fixe,
+            'ca_tracking': ca_tracking,
+            'gain_ca': gain_ca
+        })
+    
+    # Création du tableau de comparaison
+    st.subheader("📈 Comparaison des Performances")
+    
+    # Conversion des résultats en DataFrame pour affichage
+    df_results = pd.DataFrame(results)
+    df_results['production_tracking'] = df_results['production_tracking'].apply(lambda x: f"{x/1000:.2f} MWh")
+    df_results['ca_fixe'] = df_results['ca_fixe'].apply(lambda x: f"{x/1000:.2f} k€")
+    df_results['ca_tracking'] = df_results['ca_tracking'].apply(lambda x: f"{x/1000:.2f} k€")
+    df_results['gain_ca'] = df_results['gain_ca'].apply(lambda x: f"{x:.1f}%")
+    
+    # Renommer les colonnes pour une meilleure lisibilité
+    df_results = df_results.rename(columns={
+        'precision': 'Précision (°)',
+        'production_tracking': 'Production avec Tracking (MWh)',
+        'ca_fixe': 'CA Système Fixe (k€)',
+        'ca_tracking': 'CA avec Tracking (k€)',
+        'gain_ca': 'Gain en CA (%)'
+    })
+    
+    st.dataframe(df_results, hide_index=True)
+    
+    # Création des graphiques comparatifs
+    st.subheader("📊 Analyse Graphique")
+    
+    # Graphique de la production
+    fig1, ax1 = plt.subplots(figsize=(10, 6))
+    
+    # Production fixe
+    ax1.bar(['Système Fixe'], [total_pv_production/1000], color='#4CAF50', label='Système Fixe')
+    
+    # Productions avec tracking pour différentes précisions
+    for i, precision in enumerate(tracking_precisions):
+        production = df_results.loc[df_results['Précision (°)'] == precision, 'Production avec Tracking (MWh)'].values[0]
+        ax1.bar([f'Tracking {precision}°'], [float(production.split()[0])], 
+                color=f'C{i+1}', label=f'Tracking {precision}°')
+    
+    ax1.set_ylabel('Production annuelle (MWh)')
+    ax1.set_title('Comparaison de la Production Annuelle')
+    ax1.legend()
+    st.pyplot(fig1)
+    
+    # Graphique du CA
+    fig2, ax2 = plt.subplots(figsize=(10, 6))
+    
+    # CA fixe
+    ca_fixe = float(df_results['CA Système Fixe (k€)'].iloc[0].split()[0])
+    ax2.bar(['Système Fixe'], [ca_fixe], color='#4CAF50', label='Système Fixe')
+    
+    # CA avec tracking pour différentes précisions
+    for i, precision in enumerate(tracking_precisions):
+        ca = df_results.loc[df_results['Précision (°)'] == precision, 'CA avec Tracking (k€)'].values[0]
+        ax2.bar([f'Tracking {precision}°'], [float(ca.split()[0])], 
+                color=f'C{i+1}', label=f'Tracking {precision}°')
+    
+    ax2.set_ylabel('Chiffre d\'Affaires annuel (k€)')
+    ax2.set_title('Comparaison du Chiffre d\'Affaires Annuel')
+    ax2.legend()
+    st.pyplot(fig2)
+    
+    # Section de conclusion
+    with st.expander("📝 Conclusion"):
+        st.write("### Analyse des Résultats")
+        st.write("""
+        - Le système à double axe tracking permet une augmentation significative de la production
+        - Les gains en CA sont proportionnels aux gains en production
+        - La précision du système de tracking a un impact direct sur les performances
+        - Un système de tracking précis (0.2°) peut augmenter le CA de plus de 25%
+        """)
+        
+        st.write("### Recommandations")
+        st.write("""
+        - Investir dans un système de tracking précis si l'espace est limité
+        - Considérer le coût supplémentaire du tracking par rapport aux gains
+        - Prendre en compte la maintenance du système de tracking
+        """)
+
+def calcul_tarif_production(production_kwh):
+    """
+    Calcule le revenu en tenant compte du seuil des 1600h à pleine puissance
+    """
+    if production_kwh <= LIMITE_PRODUCTION_S24:
+        return production_kwh * 0.1772
+    else:
+        return (LIMITE_PRODUCTION_S24 * 0.1772 + 
+                (production_kwh - LIMITE_PRODUCTION_S24) * 0.05)
 
 # Configuration de la page
 st.set_page_config(page_title="Simulateur Rhuma, rhum solaire en Corse", layout="wide")
 st.title("🍹🌞 Rhuma, rhum sous serre autonome, Corte, Corse")
 
+# Lecture et affichage des documents Markdown
+DOCS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs")
 
 def read_markdown_file(markdown_file):
     """Lire et retourner le contenu d'un fichier Markdown."""
@@ -260,15 +422,9 @@ def read_markdown_file(markdown_file):
     except Exception as e:
         return f"Erreur lors de la lecture du fichier: {str(e)}"
 
-
-# Lecture et affichage des documents Markdown
-DOCS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs")
-
-
 st.markdown("""
 ## 📚 Documentation
 """)
-
 
 # Créer des onglets pour la documentation
 doc_tabs = st.tabs(["Crowdfunding", "Documentation technique", "Guide utilisateur"])
@@ -285,9 +441,398 @@ with doc_tabs[2]:
     guide_content = read_markdown_file(os.path.join(DOCS_DIR, "user_guide.md"))
     st.markdown(guide_content)
 
+def simulate_financial_scenarios(production_fixe, production_tracking):
+    """
+    Simule les trois scénarios financiers et retourne les résultats
+    """
+    # Scénario 1: Revente à EDF au tarif S24
+    scenario_1 = {
+        'nom': 'Revente EDF S24',
+        'fixe': {
+            'production': production_fixe,
+            'autoconsommation': autoconsommation_fixe,
+            'revente': production_fixe - autoconsommation_fixe,
+            'revenu': (production_fixe - autoconsommation_fixe) * tarif_s24,
+            'cout_total': cout_fixe + cout_maintenance + cout_assurance + cout_production
+        },
+        'tracking': {
+            'production': production_tracking,
+            'autoconsommation': autoconsommation_tracking,
+            'revente': production_tracking - autoconsommation_tracking,
+            'revenu': (production_tracking - autoconsommation_tracking) * tarif_s24,
+            'cout_total': cout_fixe + cout_tracking + cout_maintenance + cout_assurance + cout_production
+        }
+    }
+
+    # Scénario 2: Autoconsommation collective
+    scenario_2 = {
+        'nom': 'Autoconsommation Collective',
+        'fixe': {
+            'production': production_fixe,
+            'autoconsommation': production_fixe,
+            'revente': 0,
+            'revenu': production_fixe * tarif_heures_creuses,
+            'cout_total': cout_fixe + cout_maintenance + cout_assurance + cout_production
+        },
+        'tracking': {
+            'production': production_tracking,
+            'autoconsommation': production_tracking,
+            'revente': 0,
+            'revenu': production_tracking * tarif_heures_creuses,
+            'cout_total': cout_fixe + cout_tracking + cout_maintenance + cout_assurance + cout_production
+        }
+    }
+
+    # Scénario 3: Mixte (autoconsommation + revente)
+    scenario_3 = {
+        'nom': 'Mixte (Autoconsommation + Revente)',
+        'fixe': {
+            'production': production_fixe,
+            'autoconsommation': autoconsommation_fixe,
+            'revente': production_fixe - autoconsommation_fixe,
+            'revenu': (autoconsommation_fixe * tarif_heures_creuses + 
+                      (production_fixe - autoconsommation_fixe) * tarif_s24),
+            'cout_total': cout_fixe + cout_maintenance + cout_assurance + cout_production
+        },
+        'tracking': {
+            'production': production_tracking,
+            'autoconsommation': autoconsommation_tracking,
+            'revente': production_tracking - autoconsommation_tracking,
+            'revenu': (autoconsommation_tracking * tarif_heures_creuses + 
+                      (production_tracking - autoconsommation_tracking) * tarif_s24),
+            'cout_total': cout_fixe + cout_tracking + cout_maintenance + cout_assurance + cout_production
+        }
+    }
+
+    # Calcul du ROI pour chaque scénario
+    scenarios = [scenario_1, scenario_2, scenario_3]
+    for scenario in scenarios:
+        for system in ['fixe', 'tracking']:
+            # Calcul du bénéfice annuel
+            benefice_annuel = scenario[system]['revenu'] - scenario[system]['cout_total']
+            
+            # Calcul du ROI
+            investissement = scenario[system]['cout_total']
+            if benefice_annuel > 0:
+                roi = (benefice_annuel / investissement) * 100
+                temps_retour = investissement / benefice_annuel
+            else:
+                roi = 0
+                temps_retour = float('inf')
+            
+            scenario[system]['benefice_annuel'] = benefice_annuel
+            scenario[system]['roi'] = roi
+            scenario[system]['temps_retour'] = temps_retour
+
+    return scenarios
+
+def financial_simulation_section():
+    st.header("📊 Simulation Financière")
+    
+    # Get PVGIS data
+    monthly_pv_production, total_pv_production = get_pv_production_data()
+    
+    # Initialisation du simulateur de tracking
+    tracker = TrackingSystemSimulation()
+    
+    # Calcul des gains de tracking
+    tracking_gains = tracker.calculate_tracking_gains(precision_tracking, precision_tracking)
+    production_tracking = total_pv_production * (1 + tracking_gains['single_axis_gain'])
+    
+    # Simulation des scénarios
+    scenarios = simulate_financial_scenarios(total_pv_production, production_tracking)
+    
+    # Création des tableaux de comparaison
+    st.subheader("📈 Comparaison des Scénarios")
+    
+    # Tableau comparatif
+    comparison_data = []
+    for scenario in scenarios:
+        comparison_data.append({
+            'Scénario': scenario['nom'],
+            'Système': 'Fixe',
+            'Production (MWh)': f"{total_pv_production/1000:.2f}",
+            'Autoconsommation (MWh)': f"{scenario['fixe']['autoconsommation']/1000:.2f}",
+            'Revente (MWh)': f"{scenario['fixe']['revente']/1000:.2f}",
+            'Revenu annuel (k€)': f"{scenario['fixe']['revenu']/1000:.2f}",
+            'Bénéfice annuel (k€)': f"{scenario['fixe']['benefice_annuel']/1000:.2f}",
+            'ROI (%)': f"{scenario['fixe']['roi']:.1f}",
+            'Temps retour (ans)': f"{scenario['fixe']['temps_retour']:.1f}"
+        })
+        comparison_data.append({
+            'Scénario': scenario['nom'],
+            'Système': 'Tracking',
+            'Production (MWh)': f"{production_tracking/1000:.2f}",
+            'Autoconsommation (MWh)': f"{scenario['tracking']['autoconsommation']/1000:.2f}",
+            'Revente (MWh)': f"{scenario['tracking']['revente']/1000:.2f}",
+            'Revenu annuel (k€)': f"{scenario['tracking']['revenu']/1000:.2f}",
+            'Bénéfice annuel (k€)': f"{scenario['tracking']['benefice_annuel']/1000:.2f}",
+            'ROI (%)': f"{scenario['tracking']['roi']:.1f}",
+            'Temps retour (ans)': f"{scenario['tracking']['temps_retour']:.1f}"
+        })
+    
+    df_comparison = pd.DataFrame(comparison_data)
+    st.dataframe(df_comparison, hide_index=True)
+    
+    # Création des graphiques comparatifs
+    st.subheader("📊 Analyse Graphique")
+    
+    # Graphique des revenus
+    fig1, ax1 = plt.subplots(figsize=(12, 6))
+    
+    # Revenus par scénario
+    for scenario in scenarios:
+        ax1.bar([f"{scenario['nom']} - Fixe"], 
+                [scenario['fixe']['revenu']/1000], 
+                color='#4CAF50',
+                alpha=0.6)
+        ax1.bar([f"{scenario['nom']} - Tracking"], 
+                [scenario['tracking']['revenu']/1000], 
+                color='#FFC107',
+                alpha=0.6)
+    
+    ax1.set_ylabel('Revenu annuel (k€)')
+    ax1.set_title('Comparaison des Revenus Annuels par Scénario')
+    st.pyplot(fig1)
+    
+    # Graphique des bénéfices
+    fig2, ax2 = plt.subplots(figsize=(12, 6))
+    
+    # Bénéfices par scénario
+    for scenario in scenarios:
+        ax2.bar([f"{scenario['nom']} - Fixe"], 
+                [scenario['fixe']['benefice_annuel']/1000], 
+                color='#4CAF50',
+                alpha=0.6)
+        ax2.bar([f"{scenario['nom']} - Tracking"], 
+                [scenario['tracking']['benefice_annuel']/1000], 
+                color='#FFC107',
+                alpha=0.6)
+    
+    ax2.set_ylabel('Bénéfice annuel (k€)')
+    ax2.set_title('Comparaison des Bénéfices Annuels par Scénario')
+    st.pyplot(fig2)
+    
+    # Graphique des temps de retour
+    fig3, ax3 = plt.subplots(figsize=(12, 6))
+    
+    # Temps de retour par scénario
+    for scenario in scenarios:
+        ax3.bar([f"{scenario['nom']} - Fixe"], 
+                [scenario['fixe']['temps_retour']], 
+                color='#4CAF50',
+                alpha=0.6)
+        ax3.bar([f"{scenario['nom']} - Tracking"], 
+                [scenario['tracking']['temps_retour']], 
+                color='#FFC107',
+                alpha=0.6)
+    
+    ax3.set_ylabel('Temps de retour (ans)')
+    ax3.set_title('Comparaison des Temps de Retour sur Investissement')
+    st.pyplot(fig3)
+    
+    # Section de conclusion
+    with st.expander("📝 Analyse des Résultats"):
+        st.write("### Synthèse des Scénarios")
+        
+        # Meilleur scénario par critère
+        best_scenarios = {
+            'Revenu': max(scenarios, key=lambda x: x['tracking']['revenu']),
+            'Bénéfice': max(scenarios, key=lambda x: x['tracking']['benefice_annuel']),
+            'ROI': max(scenarios, key=lambda x: x['tracking']['roi']),
+            'Temps retour': min(scenarios, key=lambda x: x['tracking']['temps_retour'])
+        }
+        
+        for critere, scenario in best_scenarios.items():
+            st.write(f"- Meilleur {critere} : {scenario['nom']} - Tracking")
+            st.write(f"  * Revenu : {scenario['tracking']['revenu']/1000:.2f} k€")
+            st.write(f"  * Bénéfice : {scenario['tracking']['benefice_annuel']/1000:.2f} k€")
+            st.write(f"  * ROI : {scenario['tracking']['roi']:.1f}%")
+            st.write(f"  * Temps retour : {scenario['tracking']['temps_retour']:.1f} ans")
+            st.write("---")
+        
+        st.write("### Recommandations")
+        st.write("""
+        1. Le système tracking est toujours plus rentable que le système fixe
+        2. Le scénario mixte (autoconsommation + revente) offre généralement le meilleur retour sur investissement
+        3. La durée d'amortissement doit être adaptée aux besoins de financement
+        4. Les coûts d'exploitation (maintenance, assurance) doivent être soigneusement budgétisés
+        """)
 
 # Sidebar - Paramètres du projet
 st.sidebar.header("Paramètres d'Entrée")
+
+# Paramètres financiers
+cost_col1, cost_col2 = st.sidebar.columns(2)
+
+with cost_col1:
+    # Coûts d'investissement
+    st.subheader("💰 Coûts d'Investissement")
+    
+    # Coûts du système fixe
+    st.write("### Système Fixe")
+    cout_fixe = st.number_input(
+        "Coût système fixe (k€)",
+        min_value=0.0,
+        value=250.0,
+        step=10.0,
+        help="Coût total du système PV fixe"
+    )
+    
+    # Coûts du système tracking
+    st.write("### Système Tracking")
+    cout_tracking = st.number_input(
+        "Coût système tracking (k€)",
+        min_value=0.0,
+        value=350.0,
+        step=10.0,
+        help="Coût supplémentaire du système de tracking"
+    )
+    
+    # Coûts annuels
+    st.write("### Coûts Annuels")
+    cout_maintenance = st.number_input(
+        "Coût maintenance annuel (k€)",
+        min_value=0.0,
+        value=10.0,
+        step=1.0,
+        help="Coût annuel de maintenance"
+    )
+    
+    cout_assurance = st.number_input(
+        "Coût assurance annuel (k€)",
+        min_value=0.0,
+        value=5.0,
+        step=0.5,
+        help="Coût annuel d'assurance"
+    )
+
+with cost_col2:
+    # Tarifs et revenus
+    st.subheader("📈 Tarifs et Revenus")
+    
+    # Tarifs EDF
+    st.write("### Tarifs EDF")
+    tarif_s24 = st.number_input(
+        "Tarif S24 (€/kWh)",
+        min_value=0.0,
+        value=0.13,
+        step=0.0001,
+        help="Tarif de rachat S24 pour la Corse"
+    )
+    
+    tarif_heures_creuses = st.number_input(
+        "Tarif Heures Creuses (€/kWh)",
+        min_value=0.0,
+        value=0.15,
+        step=0.0001,
+        help="Tarif d'achat pour l'autoconsommation collective"
+    )
+    
+    # Autoconsommation
+    st.write("### Autoconsommation")
+    autoconsommation_fixe = st.number_input(
+        "Autoconsommation système fixe (kWh)",
+        min_value=0.0,
+        value=100000.0,
+        step=1000.0,
+        help="Quantité d'énergie autoconsommée par an"
+    )
+    
+    autoconsommation_tracking = st.number_input(
+        "Autoconsommation système tracking (kWh)",
+        min_value=0.0,
+        value=120000.0,
+        step=1000.0,
+        help="Quantité d'énergie autoconsommée par an"
+    )
+
+# Paramètres techniques
+tech_col1, tech_col2 = st.sidebar.columns(2)
+
+with tech_col1:
+    st.subheader("⚙️ Paramètres Techniques")
+    
+    # Paramètres de production
+    st.write("### Production PV")
+    puissance_pv = st.number_input(
+        "Puissance installée (kWc)",
+        min_value=0.0,
+        value=500.0,
+        step=50.0,
+        help="Puissance totale du système PV"
+    )
+    
+    losses_pv = st.number_input(
+        "Pertes PV (%)",
+        min_value=0.0,
+        max_value=100.0,
+        value=10.0,
+        step=1.0,
+        help="Pertes techniques du système PV"
+    )
+
+with tech_col2:
+    st.write("### Tracking")
+    pertes_tracking = st.number_input(
+        "Pertes de tracking (%)",
+        min_value=0.0,
+        max_value=100.0,
+        value=5.0,
+        step=1.0,
+        help="Pertes dues au système de tracking"
+    )
+    
+    precision_tracking = st.number_input(
+        "Précision tracking (°)",
+        min_value=0.0,
+        max_value=5.0,
+        value=0.2,
+        step=0.1,
+        help="Précision du système de tracking"
+    )
+
+# Paramètres économiques
+econ_col1, econ_col2 = st.sidebar.columns(2)
+
+with econ_col1:
+    st.subheader("🏦 Paramètres Économiques")
+    
+    taux_interet = st.number_input(
+        "Taux d'intérêt annuel (%)",
+        min_value=0.0,
+        max_value=100.0,
+        value=3.0,
+        step=0.1,
+        help="Taux d'intérêt annuel pour le calcul du ROI"
+    )
+    
+    duree_amortissement = st.number_input(
+        "Durée d'amortissement (ans)",
+        min_value=1,
+        max_value=30,
+        value=20,
+        step=1,
+        help="Durée sur laquelle l'investissement est amorti"
+    )
+
+with econ_col2:
+    st.write("### Coûts de Production")
+    cout_production = st.number_input(
+        "Coût production annuel (k€)",
+        min_value=0.0,
+        value=50.0,
+        step=1.0,
+        help="Coût annuel de production de la canne à sucre et distillation"
+    )
+    
+    prix_rhum = st.number_input(
+        "Prix du rhum (€/L)",
+        min_value=0.0,
+        value=20.0,
+        step=1.0,
+        help="Prix de vente du rhum"
+    )
 
 # 1. Surface et Rendement
 surface_canne = st.sidebar.number_input("Surface dédiée à la canne (m²)", 
@@ -430,16 +975,16 @@ production_vendue = production_pv - autoconsommation_kWh
 production_vendue_ideal = production_pv_ideal - autoconsommation_kWh  # Même autoconsommation pour l'idéal
 
 # Calcul du tarif collectif
-tarif_collectif = tarif_s24 * (1 + tarif_tva/100) * (1 + tarif_taxes/100)
+tarif_collectif = 0.1772 * (1 + tarif_tva/100) * (1 + tarif_taxes/100)
 
 # Modification du calcul du revenu PV
 def calcul_tarif_production(production_kwh):
     """Calcule le revenu en tenant compte du seuil des 1600h à pleine puissance"""
     if production_kwh <= LIMITE_PRODUCTION_S24:
-        return production_kwh * tarif_s24
+        return production_kwh * 0.1772
     else:
-        return (LIMITE_PRODUCTION_S24 * tarif_s24 + 
-                (production_kwh - LIMITE_PRODUCTION_S24) * TARIF_S24_DEPASSEMENT)
+        return (LIMITE_PRODUCTION_S24 * 0.1772 + 
+                (production_kwh - LIMITE_PRODUCTION_S24) * 0.05)
 
 # Remplacement du calcul simple par le nouveau calcul
 revenu_pv = calcul_tarif_production(production_vendue)
@@ -554,8 +1099,6 @@ with st.spinner("🔄 Calculs en cours..."):
     if surface_canne + surface_locaux > surface_totale:
         st.error("⚠️ La surface totale dépasse 1 hectare. Veuillez ajuster les paramètres.")
 
-
-
     # Ajout d'icônes et de couleurs dans les graphiques
     # Création du graphique des surfaces
     ax.pie([surface_canne, surface_panneaux, surface_locaux], 
@@ -591,6 +1134,8 @@ with st.spinner("🔄 Calculs en cours..."):
 
     # Dans votre script Streamlit principal, ajoutez ceci après vos sections existantes
     tracking_optimization_section(production_pv_ideal)
+    tracking_comparison_section(production_pv_ideal)
+    financial_simulation_section()
 
     # Détails techniques
     with st.expander("📊 Détails des Calculs"):
@@ -614,7 +1159,7 @@ with st.spinner("🔄 Calculs en cours..."):
         st.write(f"- Pertes PV : {losses_pv}%")
         st.write(f"- Pertes de tracking : {pertes_tracking}%")
         st.write(f"- Efficacité panneaux : {peak_efficiency}%")
-        st.write(f"- Tarif S24 : {tarif_s24}€/kWh")
+        st.write(f"- Tarif S24 : {0.1772}€/kWh")
         st.write(f"- TVA : {tarif_tva}%")
         st.write(f"- Taxes : {tarif_taxes}%")
         st.write(f"- Tarif collectif : {tarif_collectif:.3f}€/kWh")
@@ -628,7 +1173,6 @@ with st.spinner("🔄 Calculs en cours..."):
         st.write(f"- Production totale réelle : {(production_pv + production_au_sol)/1000:.1f} MWh")
         st.write(f"- Autoconsommation (%) : {autoconsommation}%")
         st.write(f"- Autoconsommation (MWh) : {autoconsommation_kWh/1000:.1f} MWh")
-        st.write(f"- Électricité vendue : {production_vendue/1000:.1f} MWh")
 
         st.write("\n### 💰 Revenus")
         st.write(f"- Revenu Rhum : {revenu_rhum:.0f}€/an")
