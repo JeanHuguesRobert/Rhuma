@@ -1,4 +1,4 @@
-# 🌺 Rhum Solaire de Corte
+# 🌺 Rhum Solaire de Corse
 
 ## 🎯 Description
 
