@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 from config import *
+from streamlit_extras.add_vertical_space import add_vertical_space  # Ajouté
 
 # Configuration de la page
 st.set_page_config(page_title="Simulateur Rhum Solaire Corse", layout="wide")
@@ -220,134 +221,153 @@ canne, sucre, alcool = calcul_production(surface_canne, rendement_canne, teneur_
 # Calcul revenus
 revenu_rhum = alcool * prix_alcool  # Prix de l'alcool paramétrable
 
-# Affichage des résultats
+# Barre de progression pour les calculs
+with st.spinner("🔄 Calculs en cours..."):
+    # Affichage des résultats
 
-# Production de Rhum
-st.write("\n## Production de Rhum")
-col1, col2, col3 = st.columns(3)
-col1.metric("📦 Production Canne", f"{canne/1000:.1f} t")
-col2.metric("🍬 Sucre Extrait", f"{sucre/1000:.1f} t")
-col3.metric("🥃 Alcool Pur", f"{alcool:.0f} L")
+    # Organisation des résultats dans des sections collapsibles
+    with st.expander("📊 Résultats de la Production de Rhum"):
+        st.write("\n## Production de Rhum")
+        col1, col2, col3 = st.columns(3)
+        col1.metric("📦 Production Canne", f"{canne/1000:.1f} t")
+        col2.metric("🍬 Sucre Extrait", f"{sucre/1000:.1f} t")
+        col3.metric("🥃 Alcool Pur", f"{alcool:.0f} L")
 
-# Production d'Énergie
-st.write("\n## Production d'Énergie")
-col1, col2, col3 = st.columns(3)
-col1.metric("⚡ Puissance PV (serre) installée", f"{puissance_pv:.0f} kWc")
-col2.metric("⚡ Production serre idéale", f"{production_pv_ideal/1000:.1f} MWh/an")
-col3.metric("⚡ Production serre réelle", f"{production_pv/1000:.1f} MWh/an")
+    with st.expander("⚡ Résultats de la Production d'Énergie"):
+        st.write("\n## Production d'Énergie")
+        col1, col2, col3 = st.columns(3)
+        col1.metric("⚡ Puissance PV (serre) installée", f"{puissance_pv:.0f} kWc")
+        col2.metric("⚡ Production serre idéale", f"{production_pv_ideal/1000:.1f} MWh/an")
+        col3.metric("⚡ Production serre réelle", f"{production_pv/1000:.1f} MWh/an")
 
-# Détails de l'autoconsommation
-st.write("\n## Détails de l'Autoconsommation")
-col1, col2, col3 = st.columns(3)
-col1.metric("⚡ Autoconsommation", f"{autoconsommation}%")
-col2.metric("⚡ Électricité autoconsommée", f"{autoconsommation_kWh/1000:.1f} MWh/an")
-col3.metric("⚡ Électricité vendue", f"{production_vendue/1000:.1f} MWh/an")
+    # Détails de l'autoconsommation
+    st.write("\n## Détails de l'Autoconsommation")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("⚡ Autoconsommation", f"{autoconsommation}%")
+    col2.metric("⚡ Électricité autoconsommée", f"{autoconsommation_kWh/1000:.1f} MWh/an")
+    col3.metric("⚡ Électricité vendue", f"{production_vendue/1000:.1f} MWh/an")
 
-# Auto-consommation collective
-st.write("\n## Auto-consommation collective")
-col1, col2, col3 = st.columns(3)
-col1.metric("⚡ Capacité collective", f"{capacite_complementaire:.0f} kWc")
-col2.metric("⚡ Production au sol idéale", f"{production_collective_ideal/1000:.1f} MWh/an")
-col3.metric("⚡ Production au sol réelle", f"{production_collective/1000:.1f} MWh/an")
+    # Auto-consommation collective
+    st.write("\n## Auto-consommation collective")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("⚡ Capacité collective", f"{capacite_complementaire:.0f} kWc")
+    col2.metric("⚡ Production au sol idéale", f"{production_collective_ideal/1000:.1f} MWh/an")
+    col3.metric("⚡ Production au sol réelle", f"{production_collective/1000:.1f} MWh/an")
 
-# Résumé du CA
-st.write("\n## Résumé du CA")
-col1, col2, col3 = st.columns(3)
-col1.metric("📊 CA total", f"{chiffre_affaires_total:.0f} €/an")
-col2.metric("📊 CA idéal", f"{chiffre_affaires_total_ideal:.0f} €/an")
-col3.metric("📊 Delta CA", f"{delta_ca:.0f} €/an")
+    # Résumé du CA
+    st.write("\n## Résumé du CA")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("📊 CA total", f"{chiffre_affaires_total:.0f} €/an")
+    col2.metric("📊 CA idéal", f"{chiffre_affaires_total_ideal:.0f} €/an")
+    col3.metric("📊 Delta CA", f"{delta_ca:.0f} €/an")
 
-# Graphiques
-fig, ax = plt.subplots()
-# Calcul des surfaces en m² pour 1 hectare (10000 m²)
-surface_totale = 10000
-surface_locaux = 1000  # 10% de l'hectare
-surface_canne = surface_canne  # Surface dédiée à la canne
-surface_panneaux = surface_totale - surface_locaux - surface_canne  # Reste pour les panneaux
+    # Ajout d'espaces verticaux pour une meilleure lisibilité
+    add_vertical_space(2)
 
-# Création du graphique des surfaces
-ax.pie([surface_canne, surface_panneaux, surface_locaux], 
-       labels=["Canne à sucre", "Panneaux PV", "Locaux"], 
-       colors=["#4CAF50", "#FFC107", "#9E9E9E"],
-       autopct='%1.1f%%')
-ax.set_title("Répartition des surfaces sur 1 hectare")
+    # Graphiques
+    fig, ax = plt.subplots()
+    # Calcul des surfaces en m² pour 1 hectare (10000 m²)
+    surface_totale = 10000
+    surface_locaux = 1000  # 10% de l'hectare
+    surface_canne = surface_canne  # Surface dédiée à la canne
+    surface_panneaux = surface_totale - surface_locaux - surface_canne  # Reste pour les panneaux
 
-# Création du graphique des sources de CA
-fig2, ax2 = plt.subplots()
-sources_ca = [
-    "Rhum", "PV (vente)", "PV (collectif)", "PV (idéal)"]
-values_ca = [
-    revenu_rhum,
-    revenu_pv,
-    chiffre_affaires_collectif,
-    chiffre_affaires_total_ideal - chiffre_affaires_total
-]
+    # Validation visuelle pour les entrées utilisateur
+    if surface_canne + surface_locaux > surface_totale:
+        st.error("⚠️ La surface totale dépasse 1 hectare. Veuillez ajuster les paramètres.")
+    else:
+        st.success("✅ Les paramètres sont valides.")
 
-# Création du graphique en camembert
-ax2.pie(values_ca, 
-        labels=sources_ca, 
-        colors=["#4CAF50", "#FFC107", "#9E9E9E", "#607D8B"],
-        autopct='%1.1f%%')
-ax2.set_title("Répartition des sources de CA")
 
-# Affichage des graphiques
-st.pyplot(fig)
-st.pyplot(fig2)
+    # Ajout d'icônes et de couleurs dans les graphiques
+    # Création du graphique des surfaces
+    ax.pie([surface_canne, surface_panneaux, surface_locaux], 
+        labels=["Canne à sucre", "Panneaux PV", "Locaux"], 
+        colors=["#4CAF50", "#FFC107", "#9E9E9E"],
+        autopct='%1.1f%%', startangle=90)
+    ax.legend(loc="upper right")
+    ax.set_title("Répartition des surfaces sur 1 hectare", color="#4CAF50")
 
-# Détails techniques
-with st.expander("📊 Détails des Calculs"):
-    st.write("### 🏗️ Bâtiment (Serre)")
-    st.write(f"- Surface totale : {surface_totale} m² (1 ha)")
-    st.write(f"- Surface locaux : {surface_locaux} m² (10%)")
-    st.write(f"- Surface panneaux en toiture : {surface_panneaux} m²")
-    st.write(f"- Surface canne : {surface_canne} m²")
+    # Création du graphique des sources de CA
+    fig2, ax2 = plt.subplots()
+    sources_ca = [
+        "Rhum", "PV (vente)", "PV (collectif)", "PV (idéal)"]
+    values_ca = [
+        revenu_rhum,
+        revenu_pv,
+        chiffre_affaires_collectif,
+        chiffre_affaires_total_ideal - chiffre_affaires_total
+    ]
 
-    st.write("\n### 🍯 Production de Rhum")
-    st.write(f"- Rendement canne : {rendement_canne} t/ha")
-    st.write(f"- Teneur en sucre : {teneur_sucre}%")
-    st.write(f"- Efficacité extraction : {efficacite_extraction}%")
-    st.write(f"- Efficacité distillation : {efficacite_distillation}%")
-    st.write(f"- Kg de canne/L alcool : {canne/alcool:.1f} kg/L")
-    st.write(f"- Prix de l'alcool : {prix_alcool}€/L")
+    # Création du graphique en camembert
+    ax2.pie(values_ca, 
+            labels=sources_ca, 
+            colors=["#4CAF50", "#FFC107", "#9E9E9E", "#607D8B"],
+            autopct='%1.1f%%', startangle=90)
+    ax2.set_title("Répartition des sources de CA")
+    ax.legend(loc="upper right")
 
-    st.write("\n### 🌞 Énergie Solaire")
-    st.write(f"- Puissance PV (serre) : {puissance_pv} kWc")
-    st.write(f"- Capacité PV (au sol) : {capacite_complementaire} kWc")
-    st.write(f"- Pertes PV : {losses_pv}%")
-    st.write(f"- Pertes de tracking : {pertes_tracking}%")
-    st.write(f"- Efficacité panneaux : {peak_efficiency}%")
-    st.write(f"- Tarif S24 : {tarif_s24}€/kWh")
-    st.write(f"- TVA : {tarif_tva}%")
-    st.write(f"- Taxes : {tarif_taxes}%")
-    st.write(f"- Tarif collectif : {tarif_collectif:.3f}€/kWh")
+    # Affichage des graphiques
+    st.pyplot(fig)
+    st.pyplot(fig2)
 
-    st.write("\n### 📊 Production Électrique")
-    st.write(f"- Production serre idéale : {production_pv_ideal/1000:.1f} MWh")
-    st.write(f"- Production serre réelle : {production_pv/1000:.1f} MWh")
-    st.write(f"- Production au sol idéale : {production_collective_ideal/1000:.1f} MWh")
-    st.write(f"- Production au sol réelle : {production_collective/1000:.1f} MWh")
-    st.write(f"- Production totale idéale : {(production_pv_ideal + production_collective_ideal)/1000:.1f} MWh")
-    st.write(f"- Production totale réelle : {(production_pv + production_collective)/1000:.1f} MWh")
-    st.write(f"- Autoconsommation (%) : {autoconsommation}%")
-    st.write(f"- Autoconsommation (MWh) : {autoconsommation_kWh/1000:.1f} MWh")
-    st.write(f"- Électricité vendue : {production_vendue/1000:.1f} MWh")
+    # Détails techniques
+    with st.expander("📊 Détails des Calculs"):
+        st.write("### 🏗️ Bâtiment (Serre)")
+        st.write(f"- Surface totale : {surface_totale} m² (1 ha)")
+        st.write(f"- Surface locaux : {surface_locaux} m² (10%)")
+        st.write(f"- Surface panneaux en toiture : {surface_panneaux} m²")
+        st.write(f"- Surface canne : {surface_canne} m²")
 
-    st.write("\n### 💰 Revenus")
-    st.write(f"- Revenu Rhum : {revenu_rhum:.0f}€/an")
-    st.write(f"- Revenu PV (vente) : {revenu_pv:.0f}€/an")
-    st.write(f"- CA collectif : {chiffre_affaires_collectif:.0f}€/an")
-    st.write(f"- CA collectif idéal : {chiffre_affaires_collectif_ideal:.0f}€/an")
-    st.write(f"- CA total : {chiffre_affaires_total:.0f}€/an")
-    st.write(f"- CA total idéal : {chiffre_affaires_total_ideal:.0f}€/an")
-    st.write(f"- Delta CA : {delta_ca:.0f}€/an")
+        st.write("\n### 🍯 Production de Rhum")
+        st.write(f"- Rendement canne : {rendement_canne} t/ha")
+        st.write(f"- Teneur en sucre : {teneur_sucre}%")
+        st.write(f"- Efficacité extraction : {efficacite_extraction}%")
+        st.write(f"- Efficacité distillation : {efficacite_distillation}%")
+        st.write(f"- Kg de canne/L alcool : {canne/alcool:.1f} kg/L")
+        st.write(f"- Prix de l'alcool : {prix_alcool}€/L")
+
+        st.write("\n### 🌞 Énergie Solaire")
+        st.write(f"- Puissance PV (serre) : {puissance_pv} kWc")
+        st.write(f"- Capacité PV (au sol) : {capacite_complementaire} kWc")
+        st.write(f"- Pertes PV : {losses_pv}%")
+        st.write(f"- Pertes de tracking : {pertes_tracking}%")
+        st.write(f"- Efficacité panneaux : {peak_efficiency}%")
+        st.write(f"- Tarif S24 : {tarif_s24}€/kWh")
+        st.write(f"- TVA : {tarif_tva}%")
+        st.write(f"- Taxes : {tarif_taxes}%")
+        st.write(f"- Tarif collectif : {tarif_collectif:.3f}€/kWh")
+
+        st.write("\n### 📊 Production Électrique")
+        st.write(f"- Production serre idéale : {production_pv_ideal/1000:.1f} MWh")
+        st.write(f"- Production serre réelle : {production_pv/1000:.1f} MWh")
+        st.write(f"- Production au sol idéale : {production_collective_ideal/1000:.1f} MWh")
+        st.write(f"- Production au sol réelle : {production_collective/1000:.1f} MWh")
+        st.write(f"- Production totale idéale : {(production_pv_ideal + production_collective_ideal)/1000:.1f} MWh")
+        st.write(f"- Production totale réelle : {(production_pv + production_collective)/1000:.1f} MWh")
+        st.write(f"- Autoconsommation (%) : {autoconsommation}%")
+        st.write(f"- Autoconsommation (MWh) : {autoconsommation_kWh/1000:.1f} MWh")
+        st.write(f"- Électricité vendue : {production_vendue/1000:.1f} MWh")
+
+        st.write("\n### 💰 Revenus")
+        st.write(f"- Revenu Rhum : {revenu_rhum:.0f}€/an")
+        st.write(f"- Revenu PV (vente) : {revenu_pv:.0f}€/an")
+        st.write(f"- CA collectif : {chiffre_affaires_collectif:.0f}€/an")
+        st.write(f"- CA collectif idéal : {chiffre_affaires_collectif_ideal:.0f}€/an")
+        st.write(f"- CA total : {chiffre_affaires_total:.0f}€/an")
+        st.write(f"- CA total idéal : {chiffre_affaires_total_ideal:.0f}€/an")
+        st.write(f"- Delta CA : {delta_ca:.0f}€/an")
 
 # Export des résultats
 if st.button("💾 Exporter en CSV"):
-    df = pd.DataFrame({
-        "Paramètre": ["Surface canne (m²)", "Rendement (t/ha)", "Alcool (L)", "Revenu Rhum (€)", "Production PV (kWh)", "Capacité collective (kWc)", "Production collective (MWh)", "CA collectif (€)"],
-        "Valeur": [surface_canne, rendement_canne, alcool, revenu_rhum, production_pv, capacite_complementaire, production_collective/1000, chiffre_affaires_collectif]
-    })
-    st.download_button("⬇️ Télécharger", df.to_csv(index=False), "rhum_solaire.csv", "text/csv")
     
+    df_export = pd.DataFrame({
+        "Mois": list(monthly_production.keys()) + ["Total annuel"],
+        "Production serre (MWh)": [x/1000 for x in list(monthly_pv_production.values())] + [production_pv/1000],
+        "Production collective (MWh)": [x/1000 for x in list(monthly_collective_production.values())] + [production_collective/1000],
+        "CA collectif (€)": [chiffre_affaires_collectif] * 12 + [chiffre_affaires_collectif]
+    })
+    st.download_button("⬇️ Télécharger", df_export.to_csv(index=False), "production_rhum_solaire.csv", "text/csv")
+
 # Lien vers le dépôt GitHub
-st.markdown("[GitHub Repository](https://github.com/JeanHuguesRobert/Rhuma)")    
+st.markdown("[GitHub Repository](https://github.com/JeanHuguesRobert/Rhuma)")
