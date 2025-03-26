@@ -82,7 +82,7 @@ Rhumba proves the potential of integrated technology in agricultural production,
 - Technical implementation specifics
 - Methodology validation
 
-## 📊 Résultats du Projet Rhum Solaire de Corte
+## 📊 Résultats anticipés du Projet Rhum Solaire de Corte
 
 ## 📈 Production Énergétique
 
@@ -94,7 +94,7 @@ Rhumba proves the potential of integrated technology in agricultural production,
   - PV serre : 750 000 kWh
   - PV au sol : 750 000 kWh
 
-- **Autoconsommation** : 1 MWh/an
+- **Autoconsommation** : 1 MWc
   - Maximum légal
   - Évite droits d'accise
 
@@ -107,7 +107,7 @@ Rhumba proves the potential of integrated technology in agricultural production,
   - Extraction : 85%
   - Distillation : 90%
 
-## 💰 Revenus
+## 💰 Revenus, objectif maximal à terme
 
 - **Prix de vente** : 20€/L
 - **CA annuel** : 3M€
@@ -134,8 +134,8 @@ Rhumba proves the potential of integrated technology in agricultural production,
 
 - [Documentation Technique](docs/technical.md)
 - [Guide d'Utilisation](docs/user_guide.md)
-- [Site officiel](https://rhum-solaire-corte.fr)
+- [Site officiel](https://github.com/JeanHuguesRobert/Rhuma)
 
 ## 📧 Contact
 
-Pour toute question, contactez-nous à : contact@rhum-solaire-corte.fr
+Pour toute question, contactez-nous à : institutmariani@gmail.com

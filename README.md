@@ -6,10 +6,10 @@
 ### Location
 - **City**: Corte
 - **Coordinates**: 42.327° N, 9.147° E
-- **PV System**: 500.0 kWp crystalline silicon
+- **PV System**: 2 times 500 kWc, one on the greenhouse roof and one on the ground
 
 ### PVGIS Data (2024)
-- **Annual PV Production**: 818,810.88 kWh
+- **Annual PV Production**: 818,810.88 kWh twice (1,637,621.76 kWh), assuming best two axes tracking
 - **Annual Irradiation**: 1,856.25 kWh/m²
 - **Interannual Variability**: 3.84% (31,435.03 kWh)
 - **Average Daily Production Hours**: 4.5 hours

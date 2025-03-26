@@ -17,10 +17,15 @@
 
 ### 2. Système Photovoltaïque
 
-- **Puissance installée** : 500 kWc (serre) + 1000 kWc (au sol)
+- **Puissance installée** : 
+  - Serre : 500 kWc (limite S24)
+  - Sol : 500 kWc (autoconsommation collective)
+- **Production annuelle** : 
+  - Maximum S24 : 800 MWh (500 kWc × 1600h)
+  - Au-delà : tarif dégradé (0.05€/kWh)
 - **Type de panneaux** : Bifaciaux haute efficacité (15-25%)
 - **Orientation** : Sud avec inclinaison optimale
-- **Système de tracking** : Simple axe (incliné)
+- **Système de tracking** : Simple axe (incliné, manuel)
 
 ### 3. Production de Rhum
 
@@ -76,7 +81,7 @@
   - Total : 1 500 000 kWh
 
 - **Autoconsommation** :
-  - Maximum légal : 1 MWh/an
+  - Maximum légal : 1 MWc
   - Répartition : 50% serre, 50% collective
 
 ### 2. Production Rhum

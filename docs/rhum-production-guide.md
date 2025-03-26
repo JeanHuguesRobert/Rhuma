@@ -456,8 +456,8 @@ The project's initial implementation in Corti, Corsica, serves as a proof of con
 
 - [Documentation Technique](docs/technical.md)
 - [Guide d'Utilisation](docs/user_guide.md)
-- [Site officiel](https://rhum-solaire-corte.fr)
+- [Site officiel](https://github.com/JeanHuguesRobert/Rhuma)
 
 ### Contact
 
-Pour toute question, contactez-nous à : contact@rhum-solaire-corte.fr
+Pour toute question, contactez-nous à : institutmariani@gmail.com

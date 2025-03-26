@@ -35,7 +35,8 @@ Rhumba is a modular, service-oriented architecture designed to optimize rhum pro
 - **Backend**: Node.js
 - **Data Processing**: JavaScript
 - **Machine Learning**: TensorFlow.js
-- **Database**: MongoDB
+- **Database**: PostgreSQL
+- **IoT Communication**: MQTT, LoRaWAN
 - **Real-time Communication**: WebSockets
 
 ### 3. Data Flow

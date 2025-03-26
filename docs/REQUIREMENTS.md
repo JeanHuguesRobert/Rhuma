@@ -29,7 +29,7 @@ Optimize rhum production in a greenhouse powered by solar panels, with initial i
 1. **Production Optimization**
    - Maximize rhum production efficiency with a target production of 150,000 L per year
    - Minimize energy consumption
-   - Optimize use of solar panel-generated electricity with an autoconsumption target of 1 MWh per year
+   - Optimize use of solar panel-generated electricity with an autoconsumption target of 1 MWp
 
 2. **Data Management**
    - Real-time environmental data collection
@@ -37,7 +37,7 @@ Optimize rhum production in a greenhouse powered by solar panels, with initial i
    - Performance metrics tracking, including energy efficiency ratio, production volume per solar energy unit, and reduction in operational costs
 
 3. **Solar Energy Integration**
-   - Monitor and manage solar panel energy output with an efficiency of 20%
+   - Monitor and manage solar panel energy output with an efficiency of 20% or more
    - Balance energy consumption with production needs
 
 ## Non-Functional Requirements
@@ -54,7 +54,7 @@ Optimize rhum production in a greenhouse powered by solar panels, with initial i
 - Location-specific requirements for Corsican climate
 - Compliance with local agricultural and energy regulations
 - Budget limitations for initial prototype
-- Tarification considerations, including a selling price of 20€/L, production cost of 10€/L, and a margin of 10€/L
+- Tarification considerations
 
 ## Future Expansion Considerations
 
@@ -73,8 +73,8 @@ Optimize rhum production in a greenhouse powered by solar panels, with initial i
 
 - [Documentation Technique](docs/technical.md)
 - [Guide d'Utilisation](docs/user_guide.md)
-- [Site officiel](https://rhum-solaire-corte.fr)
+- [Site officiel](https://github.com/JeanHuguesRobert/Rhuma)
 
 ## Contact
 
-Pour toute question, contactez-nous à : contact@rhum-solaire-corte.fr
+Pour toute question, contactez-nous à : institutmariani@gmail.com

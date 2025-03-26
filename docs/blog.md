@@ -6,10 +6,12 @@
 
 Découvrez notre projet unique qui combine la production de rhum de qualité avec l'énergie solaire verte ! 🍹🌞
 
-• 1MWc de panneaux photovoltaïques (500kWc sur la serre + 500kWc au sol)
-• Tarif S24 garanti + autoconsommation au tarif heure creuse
-• Production locale de rhum 100% corses
-• Prix compétitif : 20€/L
+• Installation photovoltaïque optimale (500kWc sur la serre + 500kWc au sol)
+• Tarif S24 garanti (jusqu'à 1600h de production annuelle)
+• Autoconsommation collective au tarif "Toujours heures creuses !"
+• Production locale de rhum 100% corse
+• Prix compétitif : 20€/L l'alcool pur, soit 10€/L pour du rhum 50° vendu entre 20 et 50€/L.
+• Modèle économique durable, éthique et festif.
 
 L'avenir de l'énergie et de l'agriculture en Corse commence ici ! 🌍
 
@@ -24,10 +26,9 @@ L'avenir de l'énergie et de l'agriculture en Corse commence ici ! 🌍
 Je suis ravi de vous présenter notre projet innovant qui combine la production de rhum de qualité avec une solution énergétique verte. 🍹🌞
 
 • 1MWc de capacité photovoltaïque (500kWc sur la serre + 500kWc au sol)
-• Tarification avantageuse (tarif S24 + autoconsommation)
-• Production locale de rhum 100% corses
+• Tarification avantageuse (tarif S24 + autoconsommation collective)
+• Production locale de rhum 100% corse
 • Modèle économique rentable et durable
-• Prix compétitif : 20€/L
 
 L'avenir de l'énergie et de l'agriculture en Corse commence ici ! 🌍
 
@@ -42,25 +43,26 @@ L'avenir de l'énergie et de l'agriculture en Corse commence ici ! 🌍
 • 18% de teneur en sucre
 • 85% d'efficacité extraction
 • 90% d'efficacité distillation
-• Prix du rhum : 20€/L
+• Prix du rhum : 20€/L pour l'alcool pur
+• Prix de vente : rhum 50° entre 20 et 50€/L
 
 ## 📈 Business Model
 
 • Revenus diversifiés :
   - Vente d'électricité (tarif S24)
-  - Autoconsommation collective
+  - Autoconsommation collective (tarif "Toujours heures creuses")
   - Production de rhum
 
 • Rentabilité sécurisée :
-  - Tarifs garantis (S24)
+  - Tarifs garantis par l'état (S24)
   - Autoconsommation optimisée
   - Production locale de rhum
 
 ## 🎯 Crowdfunding Objectives
 
 • Phase 1 (100k€) : Validation technique
-• Phase 2 (500k€) : Construction de la serre
-• Phase 3 (400k€) : Développement de l'autoconsommation collective
+• Phase 2 (900k€) : Construction de la serre
+• Phase 3 (500k€) : Développement de l'autoconsommation collective
 
 ## 📚 Documentation
 
@@ -70,22 +72,18 @@ L'avenir de l'énergie et de l'agriculture en Corse commence ici ! 🌍
 
 ## 📧 Contact
 
-Pour toute question, contactez-nous à : contact@rhum-solaire-corte.fr
+Pour toute question, contactez-nous à : institutmariani@gmail.com
 
 ## 🌐 Liens Utiles
 
-- [Site officiel](https://rhum-solaire-corte.fr)
-- [Page Facebook](https://facebook.com/rhumsolairecorte)
-- [Page LinkedIn](https://linkedin.com/company/rhum-solaire-corte)
+- [Site officiel](https://github.com/JeanHuguesRobert/Rhuma)
+- [Page Facebook](https://facebook.com/institutmariani)
+- [Page LinkedIn](https://linkedin.com/jeanhuguesrobert)
 
-## 📋 Note pour le Partage
+## 📈 Comment participer à la campagne de crowdfunding
 
-Pour partager sur Facebook :
-1. Copiez l'annonce Facebook
-2. Ajoutez vos commentaires personnels
-3. Partagez avec vos amis et groupes
-
-Pour partager sur LinkedIn :
-1. Copiez l'annonce LinkedIn
-2. Ajoutez votre perspective professionnelle
+1. Suivez-nous sur nos réseaux sociaux
+2. Partagez notre projet avec vos amis et votre famille
 3. Partagez avec votre réseau professionnel
+
+Ensemble, nous pouvons faire de ce projet une réalité et contribuer à un avenir durable pour la Corse ! 🌍

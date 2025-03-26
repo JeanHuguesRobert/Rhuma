@@ -8,7 +8,7 @@
   - Permis de construire
   - Modélisation énergétique
 
-## 🏗️ Phase 2 - Construction (500k€)
+## 🏗️ Phase 2 - Construction (900k€)
 
 - **Q2 2025**
   - Construction de la serre (10 000 m²)
@@ -20,7 +20,7 @@
   - Mise en place des systèmes de stockage
   - Tests de production
 
-## 🌱 Phase 3 - Développement (400k€)
+## 🌱 Phase 3 - Développement (500k€)
 
 - **Q4 2025**
   - Développement de l'autoconsommation collective
@@ -33,7 +33,7 @@
 - **Production**
   - 150 000 L de rhum/an
   - 1 500 000 kWh d'électricité/an
-  - 1 MWh d'autoconsommation
+  - 1 MWc d'autoconsommation
 
 - **Revenus**
   - 3M€ de CA annuel
@@ -62,8 +62,8 @@
 
 - [Documentation Technique](docs/technical.md)
 - [Guide d'Utilisation](docs/user_guide.md)
-- [Site officiel](https://rhum-solaire-corte.fr)
+- [Site officiel](https://github.com/JeanHuguesRobert/Rhuma)
 
 ## 📧 Contact
 
-Pour toute question, contactez-nous à : contact@rhum-solaire-corte.fr
+Pour toute question, contactez-nous à : institutmariani@gmail.com

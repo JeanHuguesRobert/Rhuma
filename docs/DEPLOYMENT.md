@@ -31,7 +31,7 @@ Comprehensive guide for deploying the Rhumba rhum production optimization system
 #### 2.1 Core System Installation
 ```bash
 # Clone the Rhumba repository
-git clone https://github.com/baronmariani/rhumba.git
+git clone https://github.com/JeanHuguesRobert/Rhumba.git
 cd rhumba
 
 # Install dependencies
