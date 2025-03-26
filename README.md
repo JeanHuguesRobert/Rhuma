@@ -1,81 +1,99 @@
-# Rhumba
-*Rhuma* is a tool for the optimization of production of rhum in a greenhouse with solar panels.
+# 🌺 Rhum Solaire de Corte
 
-## Project in Corsica
+## 🎯 Description
 
-### Location
-- **City**: Corte
-- **Coordinates**: 42.327° N, 9.147° E
-- **PV System**: 2 times 500 kWc, one on the greenhouse roof and one on the ground
+Simulateur de production de rhum sous serre solaire à Corte, Corse. L'application permet de simuler et optimiser la production de rhum en tenant compte des aspects énergétiques, agricoles et financiers.
 
-### PVGIS Data (2024)
-- **Annual PV Production**: 818,810.88 kWh twice (1,637,621.76 kWh), assuming best two axes tracking
-- **Annual Irradiation**: 1,856.25 kWh/m²
-- **Interannual Variability**: 3.84% (31,435.03 kWh)
-- **Average Daily Production Hours**: 4.5 hours
+## 📊 Fonctionnalités
 
-### Monthly Production
-| Month     | PV Production (kWh) | Irradiation (kWh/m²) | Hours/Day |
-|-----------|---------------------|-----------------------|-----------|
-| January   | 50,217.70           | 106.44                | 3.30      |
-| February  | 54,766.84           | 118.02                | 4.00      |
-| March     | 69,675.58           | 152.77                | 4.50      |
-| April     | 74,035.29           | 166.63                | 5.00      |
-| May       | 80,411.77           | 184.76                | 5.20      |
-| June      | 81,811.68           | 193.52                | 5.50      |
-| July      | 89,853.00           | 214.82                | 5.80      |
-| August    | 85,998.69           | 204.68                | 5.60      |
-| September | 72,610.33           | 167.58                | 4.90      |
-| October   | 64,062.55           | 142.96                | 4.20      |
-| November  | 46,641.66           | 100.93                | 3.20      |
-| December  | 48,725.79           | 103.13                | 3.20      |
+- Simulation de la production PV avec tracking
+- Simulation de la croissance de la canne
+- Simulation de la production de rhum
+- Optimisation des coûts
+- Export des résultats vers JSON et Google Sheets
+- Documentation intégrée
 
-### PV System Configuration
-- **Technology**: Crystalline Silicon
-- **Mounting System**: Overlay 1 Section
-- **Slope Angle**: 37° (optimal)
-- **Azimuth Angle**: -9° (optimal)
-- **Total Loss**: -11.78%
+## 🚀 Installation
 
-## Modular model
+### 1. Cloner le Projet
 
-There is a data model for all the modules involved and a Javascript "solver" accessible as service.
+```bash
+git clone https://github.com/JeanHuguesRobert/Rhuma.git
+cd Rhuma
+```
 
-The initial user case is in Corsica, in Corti, in a medium size green house.
+### 2. Bootstrap (Linux/Mac)
+
+```bash
+chmod +x bootstrap.sh
+./bootstrap.sh
+```
+
+### 2. Bootstrap (Windows)
+
+```bash
+bootstrap.bat
+```
+
+### 3. Lancer l'Application
+
+```bash
+npm start
+```
+
+## 🛠️ Démarrage
+
+```bash
+# Lancer l'application
+streamlit run streamlit_app.py
+```
+
+## 📊 Configuration
+
+### Variables d'Environnement
+
+- `GOOGLE_SHEETS_CREDENTIALS` : Credentials Google Sheets (format JSON)
 
 ## 📚 Documentation
 
-- [Presentation](docs/PRESENTATION.md)
-- [Requirements](docs/REQUIREMENTS.md)
-- [Methodology](docs/METHODOLOGY.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Deployement](docs/DEPLOYMENT.md)
-- [Results](docs/RESULTS.md)
+- [Guide Utilisateur](docs/user_guide.md)
+- [Architecture Technique](docs/ARCHITECTURE.md)
+- [Guide de Déploiement](docs/DEPLOYMENT.md)
 - [Roadmap](docs/ROADMAP.md)
 
-## 🚀 Rhum Solaire de Corte
+## 📊 Métriques de Performance
 
-## 📚 Documentation
+### Production
+- 150 000 L de rhum/an
+- 1 500 000 kWh d'électricité/an
+- 1 MWc d'autoconsommation
+- 20% de gains avec le tracking
 
-- [Blog et Annonces](docs/blog.md)
-- [Argumentaire de Crowdfunding](docs/crowdfunding.md)
-- [Documentation Technique](docs/technical.md)
-- [Guide d'Utilisation](docs/user_guide.md)
+### Finances
+- Coût PV fixe : 1000€/kWc
+- Coût tracking : 250€/kWc
+- Coût serre : 150€/m²
+- Coût annuel : 100€/kWc
 
-## 📊 Simulation
+## 🛠️ Maintenance
 
-- [Lancer le simulateur](https://acorsica.streamlit.app/)
+### Mises à jour
+- Mise à jour des dépendances
+- Mise à jour des API
+- Mise à jour des modèles
 
-## 📋 License
+### Sauvegarde
+- Sauvegarde des données
+- Sauvegarde des configurations
+- Sauvegarde des résultats
 
-MIT License
+## 📈 Monitoring
 
-## 📧 Contact
+- Logs d'application
+- Logs d'erreurs
+- Logs d'activité
+- Métriques de performance
 
-Pour toute question, contactez-nous à : contact@rhum-solaire-corte.fr
+## 📝 License
 
-## 📌 Liens Utiles
-
-- [Site officiel](https://rhum-solaire-corte.fr)
-- [Page Facebook](https://facebook.com/rhumsolairecorte)
-- [Page LinkedIn](https://linkedin.com/company/rhum-solaire-corte)
+Ce projet est sous licence MIT.

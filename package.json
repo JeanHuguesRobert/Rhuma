@@ -1,18 +1,24 @@
 {
   "name": "rhuma",
   "version": "1.0.0",
-  "description": "Rhuma - A Streamlit-based application",
+  "description": "Rhuma - Rhum di Corsica",
   "main": "index.js",
+  "author": "Jean Hugues Robert",
+  "license": "MIT",
+  "type": "module",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon --watch streamlit_app.py index.js"
+    "dev": "nodemon --watch streamlit_app.py index.js",
+    "test": "jest",
+    "install-python": "pyenv install 3.8.0 && pyenv global 3.8.0 && pip install pipenv && pipenv install -r requirements.txt",
+    "install-node": "nodeenv -p --prebuilt && npm install"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "cors": "^2.8.5",
     "dotenv": "^16.3.1"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "nodemon": "^3.0.2",
+    "jest": "^29.7.0"
   }
 }

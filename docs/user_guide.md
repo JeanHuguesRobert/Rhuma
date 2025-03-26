@@ -31,128 +31,121 @@ Ce guide vous aidera à comprendre et utiliser le simulateur de production de rh
 - **Autoconsommation** : De 0% à 100% (max 1 MWh)
 - **Pertes de tracking** : De 0% à 30%
 
-### 5. Auto-consommation collective
+### 5. Coûts de Construction
 
-- **Capacité PV (au sol)** : De 100 à 1000 kWc
+- **Coûts PV**
+  - Système fixe : 1000€/kWc
+  - Système tracking (supplémentaire) : 250€/kWc
+- **Coûts de construction de la serre**
+  - Prix moyen : 150€/m²
+  - Plage de variation : 100 à 200€/m²
+- **Coûts annuels**
+  - Maintenance : 50€/kWc/an
+  - Assurance : 20€/kWc/an
+  - Production : 30€/kWc/an
 
-## 📈 Résultats Affichés
+## 📊 Résultats de la Simulation
 
-### 1. Production Électrique
+### 1. Production
 
-- **Production serre** : Idéale et réelle
-- **Production au sol** : Idéale et réelle
-- **Production totale** : Idéale et réelle
-- **Autoconsommation** : En pourcentage et en MWh
-- **Électricité vendue** : En MWh
+- Production annuelle de rhum
+- Production d'énergie PV
+- Autoconsommation
+- Revente d'énergie
 
-### 2. Production de Rhum
+### 2. Finances
 
-- **Revenu Rhum** : En €/an
-- **Production annuelle** : En litres
-- **Coût de production** : En €/L
+- Coûts initiaux
+- Coûts annuels
+- Revenus
+- Bénéfices
+- ROI
+- Temps de retour sur investissement
 
-### 3. Revenus
+### 3. Optimisation
 
-- **Revenu PV (vente)** : En €/an
-- **CA collectif** : En €/an
-- **CA collectif idéal** : En €/an
-- **CA total** : En €/an
-- **Delta CA** : En €/an
+- Comparaison systèmes PV fixe vs tracking
+- Optimisation de l'autoconsommation
+- Analyse des scénarios
 
-## 📊 Graphiques
+## 📈 Export des Résultats
 
-### 1. Répartition des Surfaces
+### 1. Format JSON
 
-- Canne à sucre
-- Panneaux PV
-- Locaux
+Le fichier JSON exporté contient les sections suivantes :
 
-### 2. Répartition des Sources de CA
+```json
+{
+    "metadata": {
+        "timestamp": "2025-03-26T22:11:26+01:00",
+        "version": "1.0"
+    },
+    "parameters": {
+        "production_fixe": 1000000,  // Production annuelle en kWh
+        "production_tracking": 1200000,  // Production annuelle avec tracking en kWh
+        "tarifs": {
+            "s24": 0.13,  // Tarif S24 en €/kWh
+            "heures_creuses": 0.25  // Tarif heures creuses en €/kWh
+        },
+        "couts": {
+            "fixe": 1000,  // Coût système PV fixe en €/kWc
+            "tracking": 250,  // Coût supplémentaire tracking en €/kWc
+            "construction_serre": 150,  // Coût construction serre en €/m²
+            "maintenance": 50,  // Coûts annuels de maintenance en €/kWc
+            "assurance": 20,  // Coûts annuels d'assurance en €/kWc
+            "production": 30  // Coûts annuels de production en €/kWc
+        }
+    },
+    "scenarios": [
+        {
+            "nom": "Revente EDF S24",
+            "fixe": {
+                "production": 1000000,
+                "autoconsommation": 500000,
+                "revente": 500000,
+                "revenu": 65000,
+                "cout_total": 135000,
+                "benefice_annuel": -70000,
+                "roi": -51.85,
+                "temps_retour": -1.9
+            },
+            "tracking": {
+                "production": 1200000,
+                "autoconsommation": 600000,
+                "revente": 600000,
+                "revenu": 78000,
+                "cout_total": 185000,
+                "benefice_annuel": -107000,
+                "roi": -57.84,
+                "temps_retour": -1.7
+            }
+        }
+        // ... autres scénarios
+    ]
+}
+```
 
-- Rhum
-- PV (vente)
-- PV (collectif)
-- PV (idéal)
+### 2. Google Sheets
 
-## 📋 Conseils d'Utilisation
+Les résultats sont exportés dans une feuille Google Sheets structurée avec :
 
-1. **Commencez par les paramètres de base** :
-   - Surface de la canne
-   - Rendement canne
-   - Teneur en sucre
+1. **Format structuré** : Les données sont organisées dans un format tabulaire clair et facile à lire.
+2. **Partage collaboratif** : La feuille peut être partagée et modifiée en temps réel par plusieurs utilisateurs.
+3. **Calculs dynamiques** : Les formules peuvent être ajoutées pour effectuer des calculs supplémentaires.
+4. **Visualisation** : Graphiques et tableaux dynamiques peuvent être créés directement dans Google Sheets.
 
-2. **Ajustez les paramètres d'énergie** :
-   - Puissance PV
-   - Pertes PV
-   - Autoconsommation
+Pour utiliser l'export vers Google Sheets, vous devez :
 
-3. **Explorez les scénarios** :
-   - Impact des pertes de tracking
-   - Effet de l'autoconsommation
-   - Variation du tarif S24
+1. Créer un projet Google Cloud Platform (GCP)
+2. Activer l'API Google Sheets
+3. Créer des credentials (fichier JSON) et les placer dans le répertoire du projet
+4. Configurer les permissions d'accès
 
-4. **Analysez les résultats** :
-   - Production électrique
-   - Production de rhum
-   - Revenus totaux
-
-## 📊 Interprétation des Résultats
-
-### 1. Production Électrique
-
-- **Production idéale** : Sans pertes de tracking
-- **Production réelle** : Avec pertes de tracking
-- **Autoconsommation** : Limite légale de 1 MWh
-
-### 2. Production de Rhum
-
-- **Revenu Rhum** : Prix au litre x production
-- **Production annuelle** : Fonction des paramètres agricoles
-
-### 3. Revenus
-
-- **CA total** : Somme des revenus
-- **Delta CA** : Différence entre idéal et réel
-
-## 📋 Bonnes Pratiques
-
-1. **Maintenez des paramètres réalistes** :
-   - Rendement canne : 120 t/ha
-   - Teneur en sucre : 18%
-   - Efficacité extraction : 85%
-   - Efficacité distillation : 90%
-   - Efficacité panneaux : 20%
-
-2. **Optimisez l'énergie** :
-   - Minimisez les pertes PV
-   - Optimisez l'autoconsommation
-   - Gérez les pertes de tracking
-
-3. **Surveillez les limites** :
-   - Puissance PV : 500 kWc
-   - Autoconsommation : 1 MWh
-   - Tarif S24 : 1600 heures
-
-## 📊 Limites du Simulateur
-
-1. **Paramètres fixes** :
-   - Tarif S24
-   - TVA
-   - Taxes
-
-2. **Calculs simplifiés** :
-   - Production PV
-   - Autoconsommation
-   - Revenus
-
-3. **Variables non prises en compte** :
-   - Coûts de maintenance
-   - Coûts de production
-   - Variations saisonnières
+Une fois configuré, cliquez sur le bouton "Exporter vers Google Sheets" pour créer une nouvelle feuille avec tous les résultats et paramètres de la simulation. La feuille sera automatiquement partagée avec l'adresse email configurée.
 
 ## 📋 Support
 
 Pour toute question ou problème, consultez la documentation technique ou contactez l'équipe de développement.
 
-Email : contact@rhum-solaire-corte.fr
-Site : https://rhum-solaire-corte.fr
+Email : institutmariani@gmail.com
+Site : https://github.com/JeanHuguesRobert/Rhuma

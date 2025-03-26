@@ -143,3 +143,203 @@ kubectl rollout undo deployment/rhumba-core
 - Multi-site expansion
 - Cloud migration strategies
 - Advanced IoT integration
+
+## Additional Deployment Options
+
+### Streamlit Deployment
+
+```bash
+# 🚀 Guide de Déploiement
+
+## 📋 Prérequis
+
+### 1. Environnement Python
+- Python 3.8+
+- pip
+- virtualenv
+
+### 2. Dépendances
+- Streamlit
+- Pandas
+- NumPy
+- Matplotlib
+- gspread
+- oauth2client
+- python-dotenv
+- requests
+- plotly
+- scipy
+- pytest
+- black
+- isort
+
+## 📦 Installation
+
+```bash
+# 1. Créer un environnement virtuel
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate     # Windows
+
+# 2. Installer les dépendances
+pip install -r requirements.txt
+
+# 3. Installer les outils de développement
+pip install pytest black isort
+```
+
+## 📁 Structure du Projet
+
+```
+rhuma/
+├── src/
+│   ├── data/         # Données et configurations
+│   ├── models/       # Modèles de simulation
+│   │   ├── energy/    # Modèles énergie
+│   │   ├── production/ # Modèles production
+│   │   └── financial/  # Modèles financiers
+│   └── utils/        # Utilitaires
+├── docs/             # Documentation
+└── tests/            # Tests
+```
+
+## 🚀 Déploiement Local
+
+```bash
+# 1. Configurer les variables d'environnement
+export GOOGLE_SHEETS_CREDENTIALS="path/to/credentials.json"
+
+# 2. Lancer l'application
+streamlit run streamlit_app.py
+```
+
+## 🌐 Déploiement Cloud
+
+### 1. Streamlit Cloud
+
+```bash
+# 1. Créer un compte Streamlit Cloud
+# 2. Configurer les variables d'environnement
+# 3. Déployer l'application
+```
+
+### 2. Heroku
+
+```bash
+# 1. Créer une application Heroku
+# 2. Configurer les variables d'environnement
+# 3. Déployer l'application
+```
+
+## 🔐 Configuration Google Sheets
+
+1. Créer un projet Google Cloud
+2. Activer l'API Google Sheets
+3. Créer des credentials
+4. Configurer les permissions
+5. Placer le fichier `credentials.json` dans le répertoire
+
+## 🛠️ Maintenance
+
+### 1. Mises à jour
+- Mise à jour des dépendances
+- Mise à jour des API
+- Mise à jour des modèles
+
+### 2. Sauvegarde
+- Sauvegarde des données
+- Sauvegarde des configurations
+- Sauvegarde des résultats
+
+## 📊 Monitoring
+
+### 1. Logs
+- Logs d'application
+- Logs d'erreurs
+- Logs d'activité
+
+### 2. Métriques
+- Temps de réponse
+- Utilisation des ressources
+- Nombre d'utilisateurs
+```
+
+### Local Deployment
+
+```bash
+# 1. Configurer les variables d'environnement
+export GOOGLE_SHEETS_CREDENTIALS="path/to/credentials.json"
+
+# 2. Lancer l'application
+streamlit run streamlit_app.py
+```
+
+### Cloud Deployment
+
+#### Streamlit Cloud
+
+```bash
+# 1. Créer un compte Streamlit Cloud
+# 2. Configurer les variables d'environnement
+# 3. Déployer l'application
+```
+
+#### Heroku
+
+```bash
+# 1. Créer une application Heroku
+# 2. Configurer les variables d'environnement
+# 3. Déployer l'application
+```
+
+### Google Sheets Configuration
+
+1. Créer un projet Google Cloud
+2. Activer l'API Google Sheets
+3. Créer des credentials
+4. Configurer les permissions
+5. Placer le fichier `credentials.json` dans le répertoire
+
+### Maintenance
+
+#### Updates
+
+- Mise à jour des dépendances
+- Mise à jour des API
+- Mise à jour des modèles
+
+#### Backup
+
+- Sauvegarde des données
+- Sauvegarde des configurations
+- Sauvegarde des résultats
+
+### Monitoring
+
+#### Logs
+
+- Logs d'application
+- Logs d'erreurs
+- Logs d'activité
+
+#### Metrics
+
+- Temps de réponse
+- Utilisation des ressources
+- Nombre d'utilisateurs
+
+### Docker Deployment (Optional)
+
+```bash
+# 1. Cloner le dépôt
+gh repo clone JeanHuguesRobert/Rhuma
+
+cd Rhuma
+
+# 2. Créer un nouveau dépôt
+gh repo create votre-nom-de-projet --public
+
+# 3. Configurer le nouveau dépôt
+git remote rename origin upstream
+git remote add origin https://github.com/votre-username/votre-nom-de-projet.git
+git push -u origin main

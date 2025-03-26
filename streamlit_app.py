@@ -8,7 +8,15 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import json
+from datetime import datetime
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+import numpy as np
+from dotenv import load_dotenv
 
+# Charger les variables d'environnement
+load_dotenv()
 
 # Constantes de configuration
 SURFACE_CANNE_MIN = 1000  # m²
@@ -37,8 +45,6 @@ HEURES_PLEIN_SOLEIL = 1600  # heures/an
 LIMITE_PRODUCTION_S24 = LIMITE_PUISSANCE_S24 * HEURES_PLEIN_SOLEIL  # kWh/an
 TARIF_S24_DEPASSEMENT = 0.05  # €/kWh au-delà de la limite
 
-
-import numpy as np
 
 class TrackingSystemSimulation:
     def __init__(self, standard_panel_efficiency=0.22):
@@ -434,7 +440,7 @@ with doc_tabs[0]:
     st.markdown(crowdfunding_content)
 
 with doc_tabs[1]:
-    technical_content = read_markdown_file(os.path.join(DOCS_DIR, "technical.md"))
+    technical_content = read_markdown_file(os.path.join(DOCS_DIR, "ARCHITECTURE.md"))
     st.markdown(technical_content)
 
 with doc_tabs[2]:
@@ -658,56 +664,247 @@ def financial_simulation_section():
         3. La durée d'amortissement doit être adaptée aux besoins de financement
         4. Les coûts d'exploitation (maintenance, assurance) doivent être soigneusement budgétisés
         """)
+    
+    # Export JSON
+    with st.expander("💾 Export des Résultats"):
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("Exporter en JSON"):
+                # Préparer les données pour l'export
+                export_data = {
+                    'metadata': {
+                        'timestamp': datetime.now().isoformat(),
+                        'version': '1.0'
+                    },
+                    'parameters': {
+                        'production_fixe': total_pv_production,
+                        'production_tracking': production_tracking,
+                        'tarifs': {
+                            's24': tarif_s24,
+                            'heures_creuses': tarif_heures_creuses
+                        },
+                        'couts': {
+                            'fixe': cout_fixe,
+                            'tracking': cout_tracking,
+                            'construction_serre': cout_construction,
+                            'maintenance': cout_maintenance,
+                            'assurance': cout_assurance,
+                            'production': cout_production
+                        }
+                    },
+                    'scenarios': scenarios
+                }
+                
+                result = export_to_json(export_data)
+                st.write(result)
+        
+        with col2:
+            if st.button("Exporter vers Google Sheets"):
+                result = export_to_google_sheets(export_data)
+                st.write(result)
+
+def export_to_json(data, filename="simulation_results.json"):
+    """
+    Exporte les résultats de la simulation au format JSON
+    """
+    try:
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+        return f"Les résultats ont été exportés avec succès dans {filename}"
+    except Exception as e:
+        return f"Erreur lors de l'export : {str(e)}"
+
+def get_google_sheet_client():
+    """
+    Configure et retourne le client Google Sheets
+    """
+    try:
+        scope = [
+            'https://spreadsheets.google.com/feeds',
+            'https://www.googleapis.com/auth/drive'
+        ]
+        
+        # Récupérer les credentials depuis la variable d'environnement
+        credentials_json = os.getenv('GOOGLE_SHEETS_CREDENTIALS')
+        
+        if not credentials_json:
+            raise ValueError("Les credentials Google Sheets ne sont pas définis dans les variables d'environnement")
+            
+        # Charger les credentials depuis la chaîne JSON
+        credentials_dict = json.loads(credentials_json)
+        credentials = ServiceAccountCredentials.from_json_keyfile_dict(
+            credentials_dict,
+            scope
+        )
+        
+        return gspread.authorize(credentials)
+    except Exception as e:
+        st.error(f"Erreur lors de la configuration de Google Sheets: {str(e)}")
+        return None
+
+def export_to_google_sheets(data, sheet_name="Simulation Rhuma"):
+    """
+    Exporte les données vers une nouvelle feuille Google Sheets
+    """
+    try:
+        # Initialiser le client
+        client = get_google_sheet_client()
+        if not client:
+            return "Configuration Google Sheets non valide"
+            
+        # Créer un nouveau spreadsheet
+        spreadsheet = client.create(sheet_name)
+        
+        # Partager le spreadsheet avec l'utilisateur
+        spreadsheet.share(
+            'jean.hugues.robert@gmail.com',  # Adresse email à modifier
+            perm_type='user',
+            role='writer'
+        )
+        
+        # Sélectionner la première feuille
+        worksheet = spreadsheet.get_worksheet(0)
+        
+        # Préparer les données pour l'export
+        headers = [
+            'Paramètre', 'Valeur', 'Unité',
+            'Scénario', 'Système', 'Production (MWh)',
+            'Autoconsommation (MWh)', 'Revente (MWh)',
+            'Revenu annuel (k€)', 'Bénéfice annuel (k€)',
+            'ROI (%)', 'Temps retour (ans)'
+        ]
+        
+        # Ajouter les en-têtes
+        worksheet.append_row(headers)
+        
+        # Ajouter les paramètres
+        params = [
+            ['Surface canne', f"{surface_canne} m²", ''],
+            ['Rendement canne', f"{rendement_canne} t/ha", ''],
+            ['Teneur en sucre', f"{teneur_sucre}%"],
+            ['Puissance PV', f"{puissance_pv} kWc", ''],
+            ['Tarif S24', f"{tarif_s24} €/kWh", ''],
+            ['Tarif Heures Creuses', f"{tarif_heures_creuses} €/kWh", ''],
+            ['Coût fixe', f"{cout_fixe} €", ''],
+            ['Coût tracking', f"{cout_tracking} €", ''],
+            ['Coût construction serre', f"{cout_construction} €/m²", ''],
+            ['Coût maintenance', f"{cout_maintenance} €/an", ''],
+            ['Coût assurance', f"{cout_assurance} €/an", ''],
+            ['Coût production', f"{cout_production} €/an", '']
+        ]
+        
+        for param in params:
+            worksheet.append_row(param + [''] * (len(headers) - 3))
+        
+        # Ajouter les résultats des scénarios
+        for scenario in data['scenarios']:
+            for system in ['fixe', 'tracking']:
+                row = [
+                    '', '', '',
+                    scenario['nom'],
+                    system,
+                    f"{data['parameters'][f'production_{system}']/1000:.2f}",
+                    f"{scenario[system]['autoconsommation']/1000:.2f}",
+                    f"{scenario[system]['revente']/1000:.2f}",
+                    f"{scenario[system]['revenu']/1000:.2f}",
+                    f"{scenario[system]['benefice_annuel']/1000:.2f}",
+                    f"{scenario[system]['roi']:.1f}",
+                    f"{scenario[system]['temps_retour']:.1f}"
+                ]
+                worksheet.append_row(row)
+        
+        return f"Les résultats ont été exportés avec succès dans {spreadsheet.url}"
+    except Exception as e:
+        return f"Erreur lors de l'export Google Sheets : {str(e)}"
 
 # Sidebar - Paramètres du projet
 st.sidebar.header("Paramètres d'Entrée")
+
+# Coûts de construction
+st.sidebar.subheader("Coûts de Construction")
+
+# Coûts PV
+st.sidebar.markdown("### Coûts PV")
+cout_fixe = st.sidebar.number_input(
+    "Coût système PV fixe (€/kWc)",
+    min_value=0,
+    value=1000,  # Prix moyen d'un système PV fixe en 2024
+    step=100,
+    help="Coût d'installation d'un système PV fixe par kWc"
+)
+
+# Coûts tracking
+cout_tracking = st.sidebar.number_input(
+    "Coût supplémentaire tracking (€/kWc)",
+    min_value=0,
+    value=250,  # Prix moyen du système tracking en 2024
+    step=50,
+    help="Coût supplémentaire pour le système de tracking par kWc"
+)
+
+# Coûts de construction
+cout_construction = st.sidebar.number_input(
+    "Coût construction serre (€/m²)",
+    min_value=0,
+    value=150,  # Prix moyen d'une serre standard en 2024
+    step=50,
+    help="Coût de construction de la serre par m². Pour une serre standard, les prix varient généralement entre 100 et 200€/m² selon les équipements."
+)
+
+# Coûts annuels
+st.sidebar.markdown("### Coûts Annuels")
+cout_maintenance = st.sidebar.number_input(
+    "Coût maintenance annuel (€/kWc)",
+    min_value=0,
+    value=50,  # Prix moyen de maintenance en 2024
+    step=10,
+    help="Coût annuel de maintenance par kWc"
+)
+
+cout_assurance = st.sidebar.number_input(
+    "Coût assurance annuel (€/kWc)",
+    min_value=0,
+    value=20,  # Prix moyen d'assurance en 2024
+    step=5,
+    help="Coût annuel d'assurance par kWc"
+)
+
+cout_production = st.sidebar.number_input(
+    "Coût production annuel (€/kWc)",
+    min_value=0,
+    value=30,  # Prix moyen de production en 2024
+    step=5,
+    help="Coût annuel de production par kWc"
+)
+
+# Calcul des coûts totaux
+def calculate_total_costs(puissance_pv, surface_serre):
+    """
+    Calcule les coûts totaux du projet
+    """
+    # Coûts initiaux
+    cout_pv = puissance_pv * (cout_fixe + cout_tracking)
+    cout_serre = surface_serre * cout_construction
+    
+    # Coûts annuels
+    couts_annuels = {
+        'maintenance': puissance_pv * cout_maintenance,
+        'assurance': puissance_pv * cout_assurance,
+        'production': puissance_pv * cout_production
+    }
+    
+    return {
+        'cout_pv': cout_pv,
+        'cout_serre': cout_serre,
+        'cout_total': cout_pv + cout_serre,
+        'couts_annuels': couts_annuels
+    }
 
 # Paramètres financiers
 cost_col1, cost_col2 = st.sidebar.columns(2)
 
 with cost_col1:
-    # Coûts d'investissement
-    st.subheader("💰 Coûts d'Investissement")
-    
-    # Coûts du système fixe
-    st.write("### Système Fixe")
-    cout_fixe = st.number_input(
-        "Coût système fixe (k€)",
-        min_value=0.0,
-        value=250.0,
-        step=10.0,
-        help="Coût total du système PV fixe"
-    )
-    
-    # Coûts du système tracking
-    st.write("### Système Tracking")
-    cout_tracking = st.number_input(
-        "Coût système tracking (k€)",
-        min_value=0.0,
-        value=350.0,
-        step=10.0,
-        help="Coût supplémentaire du système de tracking"
-    )
-    
-    # Coûts annuels
-    st.write("### Coûts Annuels")
-    cout_maintenance = st.number_input(
-        "Coût maintenance annuel (k€)",
-        min_value=0.0,
-        value=10.0,
-        step=1.0,
-        help="Coût annuel de maintenance"
-    )
-    
-    cout_assurance = st.number_input(
-        "Coût assurance annuel (k€)",
-        min_value=0.0,
-        value=5.0,
-        step=0.5,
-        help="Coût annuel d'assurance"
-    )
-
-with cost_col2:
     # Tarifs et revenus
     st.subheader("📈 Tarifs et Revenus")
     
@@ -745,6 +942,16 @@ with cost_col2:
         value=120000.0,
         step=1000.0,
         help="Quantité d'énergie autoconsommée par an"
+    )
+
+with cost_col2:
+    st.write("### Coûts de Production")
+    prix_rhum = st.number_input(
+        "Prix du rhum (€/L)",
+        min_value=0.0,
+        value=20.0,
+        step=1.0,
+        help="Prix de vente du rhum"
     )
 
 # Paramètres techniques
@@ -817,21 +1024,20 @@ with econ_col1:
     )
 
 with econ_col2:
-    st.write("### Coûts de Production")
     cout_production = st.number_input(
-        "Coût production annuel (k€)",
+        "Coût production annuel (€/kWc)",
         min_value=0.0,
-        value=50.0,
+        value=30.0,
         step=1.0,
         help="Coût annuel de production de la canne à sucre et distillation"
     )
     
-    prix_rhum = st.number_input(
-        "Prix du rhum (€/L)",
+    prix_alcool = st.number_input(
+        "Prix de l'alcool (€/L)",
         min_value=0.0,
         value=20.0,
         step=1.0,
-        help="Prix de vente du rhum"
+        help="Prix de vente de l'alcool"
     )
 
 # 1. Surface et Rendement

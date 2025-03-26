@@ -1,80 +1,147 @@
-# Rhumba Project Requirements
+# 📋 Spécifications du Projet Rhum Solaire de Corte
 
-## Project Goal
-Optimize rhum production in a greenhouse powered by solar panels, with initial implementation in Corti, Corsica, incorporating the new constants and project structure.
+## 🎯 Objectif du Projet
+Optimiser la production de rhum dans une serre solaire, avec une première implémentation à Corte, en Corse, en utilisant un simulateur Python et une interface Streamlit.
 
-## System Requirements
+## 🏗️ Spécifications Techniques
 
-### Hardware
-- Medium-sized greenhouse with a total surface area of 10,000 m², including:
-  - 6,000 to 10,000 m² for cane cultivation
-  - 3,000 m² for solar panels
-  - 1,000 m² for local facilities
-- Solar panel installation with a total power of 1MWc, divided into:
-  - 500kWc on the greenhouse
-  - 500kWc on the ground
-- Environmental monitoring equipment for tracking production energy, water consumption, product quality, temperature, and humidity
+### 1. Architecture
+- Application web avec Streamlit
+- Backend Python avec modèles de simulation
+- Intégration Google Sheets pour l'export
+- API PVGIS pour les données météorologiques
 
-### Software
-- JavaScript-based optimization solver
-- Data collection and analysis tools
-- Modular architecture supporting:
-  * Greenhouse climate control
-  * Solar energy management
-  * Rhum production tracking
-  * Monitoring of production energy, water consumption, product quality, temperature, and humidity
+### 2. Fonctionnalités
 
-## Functional Requirements
+#### Simulation
+- Simulation de la production PV
+- Simulation de la croissance de la canne
+- Simulation de la production de rhum
+- Optimisation des coûts
+- Export des résultats
 
-1. **Production Optimization**
-   - Maximize rhum production efficiency with a target production of 150,000 L per year
-   - Minimize energy consumption
-   - Optimize use of solar panel-generated electricity with an autoconsumption target of 1 MWp
+#### Interface
+- Interface utilisateur intuitive
+- Graphiques et visualisations
+- Export vers JSON et Google Sheets
+- Documentation intégrée
 
-2. **Data Management**
-   - Real-time environmental data collection
-   - Historical production data analysis
-   - Performance metrics tracking, including energy efficiency ratio, production volume per solar energy unit, and reduction in operational costs
+### 3. Dépendances
+- Streamlit
+- Pandas
+- NumPy
+- Matplotlib
+- gspread
+- oauth2client
+- python-dotenv
+- requests
+- plotly
+- scipy
+- pytest
+- black
+- isort
 
-3. **Solar Energy Integration**
-   - Monitor and manage solar panel energy output with an efficiency of 20% or more
-   - Balance energy consumption with production needs
+## 📊 Spécifications Fonctionnelles
 
-## Non-Functional Requirements
+### 1. Simulation de Production
+- Simulation de la production PV avec tracking
+- Optimisation de l'autoconsommation
+- Calcul des coûts de construction
+- Simulation des coûts annuels
+- Analyse du ROI
 
-- **Scalability**: Ability to adapt to different greenhouse sizes
-- **Reliability**: Continuous operation with minimal downtime
-- **Maintainability**: Modular design for easy updates and maintenance, with scheduled maintenance including:
-  - Monthly cleaning
-  - Quarterly inspection
-  - Annual maintenance
+### 2. Gestion des Données
+- Import des données météorologiques
+- Sauvegarde des simulations
+- Export des résultats
+- Historique des simulations
 
-## Constraints
+### 3. Interface Utilisateur
+- Interface en français
+- Visualisation des résultats
+- Export des données
+- Documentation intégrée
 
-- Location-specific requirements for Corsican climate
-- Compliance with local agricultural and energy regulations
-- Budget limitations for initial prototype
-- Tarification considerations
+## 📈 Métriques de Performance
 
-## Future Expansion Considerations
+### 1. Production
+- 150 000 L de rhum/an
+- 1 500 000 kWh d'électricité/an
+- 1 MWc d'autoconsommation
+- 20% de gains avec le tracking
 
-- Multi-site deployment
-- Advanced machine learning for predictive optimization
-- Potential for international greenhouse implementations
+### 2. Finances
+- Coût PV fixe : 1000€/kWc
+- Coût tracking : 250€/kWc
+- Coût serre : 150€/m²
+- Coût annuel : 100€/kWc
 
-## Performance Metrics
+### 3. Durabilité
+- 100% d'énergie verte
+- 5 ans d'amortissement
+- 25 ans de durée de vie
 
-- Energy efficiency ratio
-- Production volume per solar energy unit
-- Reduction in operational costs
-- Production quality metrics, including cane yield, sugar content, extraction efficiency, and distillation efficiency
+## 🛠️ Spécifications Techniques
 
-## Documentation
+### 1. Structure du Projet
 
-- [Documentation Technique](docs/technical.md)
-- [Guide d'Utilisation](docs/user_guide.md)
-- [Site officiel](https://github.com/JeanHuguesRobert/Rhuma)
+```
+rhuma/
+├── src/
+│   ├── data/         # Données et configurations
+│   ├── models/       # Modèles de simulation
+│   │   ├── energy/    # Modèles énergie
+│   │   ├── production/ # Modèles production
+│   │   └── financial/  # Modèles financiers
+│   └── utils/        # Utilitaires
+├── docs/             # Documentation
+└── tests/            # Tests
+```
 
-## Contact
+### 2. Configuration
+- Variables d'environnement
+- Configuration Google Sheets
+- Paramètres de simulation
+- Métriques de performance
 
-Pour toute question, contactez-nous à : institutmariani@gmail.com
+### 3. Tests
+- Tests unitaires
+- Tests d'intégration
+- Tests de performance
+- Tests d'acceptation
+
+## 📊 Indicateurs de Performance
+
+### 1. Production
+- Volume de production
+- Qualité du produit
+- Efficacité énergétique
+
+### 2. Finances
+- Coûts initiaux
+- Coûts annuels
+- ROI
+- Temps de retour
+
+### 3. Technique
+- Temps de réponse
+- Utilisation des ressources
+- Nombre d'utilisateurs
+
+## 🛠️ Maintenance
+
+### 1. Mises à jour
+- Mise à jour des dépendances
+- Mise à jour des API
+- Mise à jour des modèles
+
+### 2. Sauvegarde
+- Sauvegarde des données
+- Sauvegarde des configurations
+- Sauvegarde des résultats
+
+### 3. Monitoring
+- Logs d'application
+- Logs d'erreurs
+- Logs d'activité
+- Métriques de performance
