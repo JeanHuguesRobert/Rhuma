@@ -393,3 +393,71 @@ The Rhumba project's core mission aligns directly with advanced rhum production 
 Rhum production is a complex, nuanced process blending traditional craftsmanship with modern technology. The Rhumba project represents a revolutionary approach to agricultural optimization, demonstrating how advanced technologies can transform traditional production methods. By integrating data science, renewable energy, and precision agriculture, Rhumba offers a blueprint for sustainable, efficient rhum production that goes beyond traditional methodologies.
 
 The project's initial implementation in Corti, Corsica, serves as a proof of concept for a broader vision of technologically enhanced agricultural production. From precise climate control to advanced energy management, Rhumba showcases the potential of combining deep agricultural knowledge with cutting-edge technological solutions. For a 6000m² facility, careful planning, significant investment, and advanced technologies can create a sustainable and profitable rhum production operation.
+
+## Nouveau Guide de Production de Rhum
+
+### Cultivation de la Canne à Sucre
+
+#### Préparation du Terrain
+- **Surface** : 6 000 à 10 000 m²
+- **Espacement** : 1,5 m entre les rangs
+- **Profondeur** : 15 cm
+
+#### Rendement
+- **Objectif** : 120 t/ha
+- **Plage** : 80-150 t/ha
+- **Teneur en sucre** : 18% (12-20%)
+
+### Processus de Production
+
+#### Extraction
+- **Efficacité** : 85% (60-90%)
+- **Capacité** : 1 000 L/h
+- **Volume total** : 10 000 L
+
+#### Distillation
+- **Efficacité** : 90% (70-95%)
+- **Réfrigération** : 100 kW
+- **Production annuelle** : 150 000 L
+
+### Tarification
+
+- **Prix de vente** : 20€/L (15-30€/L)
+- **Coût de production** : 10€/L
+- **Marge** : 10€/L
+
+### Maintenance
+
+#### Équipements
+- **Chaudière** : Semestrielle
+- **Distillateur** : Trimestrielle
+- **Fermenteurs** : Mensuelle
+
+#### Production
+- **Nettoyage** : Mensuel
+- **Inspection** : Trimestrielle
+- **Maintenance** : Annuelle
+
+### Monitoring
+
+#### Paramètres à suivre
+- **Rendement canne**
+- **Teneur en sucre**
+- **Efficacité extraction**
+- **Efficacité distillation**
+- **Production quotidienne**
+
+#### Alertes
+- **Panne équipement**
+- **Anomalies production**
+- **Maintenance préventive**
+
+### Documentation
+
+- [Documentation Technique](docs/technical.md)
+- [Guide d'Utilisation](docs/user_guide.md)
+- [Site officiel](https://rhum-solaire-corte.fr)
+
+### Contact
+
+Pour toute question, contactez-nous à : contact@rhum-solaire-corte.fr

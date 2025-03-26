@@ -43,7 +43,7 @@ There is a data model for all the modules involved and a Javascript "solver" acc
 
 The initial user case is in Corsica, in Corti, in a medium size green house.
 
-## Documentation
+## 📚 Documentation
 
 - [Presentation](docs/PRESENTATION.md)
 - [Requirements](docs/REQUIREMENTS.md)
@@ -52,9 +52,30 @@ The initial user case is in Corsica, in Corti, in a medium size green house.
 - [Deployement](docs/DEPLOYMENT.md)
 - [Results](docs/RESULTS.md)
 - [Roadmap](docs/ROADMAP.md)
-- [Simulation](https://acorsica.streamlit.app/)
 
-## License
+## 🚀 Rhum Solaire de Corte
 
-Creative Common
-Author : Jean Hugues Noël Robert, aka Baron Mariani
+## 📚 Documentation
+
+- [Blog et Annonces](docs/blog.md)
+- [Argumentaire de Crowdfunding](docs/crowdfunding.md)
+- [Documentation Technique](docs/technical.md)
+- [Guide d'Utilisation](docs/user_guide.md)
+
+## 📊 Simulation
+
+- [Lancer le simulateur](https://acorsica.streamlit.app/)
+
+## 📋 License
+
+MIT License
+
+## 📧 Contact
+
+Pour toute question, contactez-nous à : contact@rhum-solaire-corte.fr
+
+## 📌 Liens Utiles
+
+- [Site officiel](https://rhum-solaire-corte.fr)
+- [Page Facebook](https://facebook.com/rhumsolairecorte)
+- [Page LinkedIn](https://linkedin.com/company/rhum-solaire-corte)

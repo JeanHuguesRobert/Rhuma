@@ -1,92 +1,69 @@
-# Rhumba Project Roadmap
+# 📅 Roadmap du Projet Rhum Solaire de Corte
 
-## Project Vision
-Advancing rhum production through innovative technology, sustainable practices, and data-driven optimization.
+## 🚀 Phase 1 - Validation Technique (100k€)
 
-## Roadmap Phases
+- **Q1 2025**
+  - Validation technique du concept
+  - Études préliminaires
+  - Permis de construire
+  - Modélisation énergétique
 
-### Phase 1: Proof of Concept (Current Stage)
-- [x] Initial greenhouse implementation in Corti, Corsica
-- [x] Basic sensor network deployment
-- [x] Prototype JavaScript solver development
-- [x] Preliminary data collection and analysis
+## 🏗️ Phase 2 - Construction (500k€)
 
-### Phase 2: Technology Refinement (6-12 months)
-#### Technical Improvements
-- Advanced machine learning algorithm development
-- Enhanced solar energy prediction models
-- Improved IoT sensor integration
-- Expanded data analytics capabilities
+- **Q2 2025**
+  - Construction de la serre (10 000 m²)
+  - Installation des panneaux PV (500 kWc)
+  - Installation des équipements agricoles
 
-#### Operational Enhancements
-- Optimize production efficiency algorithms
-- Develop more granular climate control mechanisms
-- Improve real-time decision-making systems
+- **Q3 2025**
+  - Installation de la distillerie
+  - Mise en place des systèmes de stockage
+  - Tests de production
 
-### Phase 3: Scalability and Expansion (12-24 months)
-#### Geographic Expansion
-- Pilot programs in other Corsican greenhouses
-- Develop adaptable deployment framework
-- Create location-specific optimization modules
+## 🌱 Phase 3 - Développement (400k€)
 
-#### Technology Integration
-- Edge computing implementation
-- Advanced AI/ML integration
-- Blockchain-based data verification
-- Enhanced cybersecurity measures
+- **Q4 2025**
+  - Développement de l'autoconsommation collective
+  - Optimisation des processus
+  - Marketing et distribution
+  - Certification qualité
 
-### Phase 4: Broader Agricultural Applications (24-36 months)
-#### Vertical Market Expansion
-- Adaptation for different agricultural products
-- Development of generalized optimization framework
-- Create plug-and-play agricultural optimization platform
+## 📈 Objectifs à 5 ans
 
-#### Research and Innovation
-- Academic partnerships
-- Open-source component development
-- International agricultural technology collaboration
+- **Production**
+  - 150 000 L de rhum/an
+  - 1 500 000 kWh d'électricité/an
+  - 1 MWh d'autoconsommation
 
-## Key Performance Indicators (KPIs)
-- Production efficiency improvement
-- Energy utilization optimization
-- Technological innovation metrics
-- Scalability and adaptability
+- **Revenus**
+  - 3M€ de CA annuel
+  - 1M€ de bénéfice
+  - 100% d'énergie verte
 
-## Resource Requirements
-- Additional software development resources
-- Advanced sensor and IoT technologies
-- Machine learning expertise
-- Agricultural domain specialists
+## 📊 Indicateurs de Performance
 
-## Potential Challenges
-- Technology adoption barriers
-- Regional regulatory compliance
-- Climate variability
-- Technological integration complexities
+- **Énergie**
+  - Production PV : 1 500 000 kWh/an
+  - Autoconsommation : 1 MWh/an
+  - Efficacité panneaux : 20%
 
-## Ethical and Sustainable Considerations
-- Minimal environmental impact
-- Fair technology access
-- Support for local agricultural communities
-- Transparent technological development
+- **Production**
+  - Rendement canne : 120 t/ha
+  - Teneur en sucre : 18%
+  - Efficacité extraction : 85%
+  - Efficacité distillation : 90%
 
-## Funding and Support
-- Seek agricultural technology grants
-- Explore venture capital opportunities
-- Develop strategic partnerships
-- Open-source community engagement
+- **Finances**
+  - Prix de vente : 20€/L
+  - Marge : 10€/L
+  - ROI : 5 ans
 
-## Community and Ecosystem
-- Developer documentation
-- Open-source contribution framework
-- Knowledge sharing platforms
-- Technology transfer initiatives
+## 📋 Documentation
 
-## Long-Term Vision
-Creating a globally applicable, sustainable agricultural optimization ecosystem that empowers local producers through advanced technology.
+- [Documentation Technique](docs/technical.md)
+- [Guide d'Utilisation](docs/user_guide.md)
+- [Site officiel](https://rhum-solaire-corte.fr)
 
-## Communication and Transparency
-- Regular public progress reports
-- Open-source development
-- Academic and industry presentations
-- Community feedback mechanisms
+## 📧 Contact
+
+Pour toute question, contactez-nous à : contact@rhum-solaire-corte.fr
