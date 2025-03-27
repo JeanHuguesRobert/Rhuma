@@ -21,30 +21,42 @@ load_dotenv()
 # Constantes de configuration
 SURFACE_CANNE_MIN = 1000  # m²
 SURFACE_CANNE_MAX = 5000  # m²
+SURFACE_CANNE_DEFAULT = int(os.getenv('RHUMA_SURFACE_CANNE', 3000))  # m²
+
 RENDEMENT_CANNE_MIN = 80  # t/ha
 RENDEMENT_CANNE_MAX = 160  # t/ha
+RENDEMENT_CANNE_DEFAULT = int(os.getenv('RHUMA_RENDEMENT_CANNE', 120))  # t/ha
+
 TENEUR_SUCRE_MIN = 10  # %
 TENEUR_SUCRE_MAX = 20  # %
+TENEUR_SUCRE_DEFAULT = int(os.getenv('RHUMA_TENEUR_SUCRE', 15))  # %
+
 EFFICACITE_EXTRACTION_MIN = 60  # %
 EFFICACITE_EXTRACTION_MAX = 95  # %
+EFFICACITE_EXTRACTION_DEFAULT = int(os.getenv('RHUMA_EFFICACITE_EXTRACTION', 80))  # %
+
 EFFICACITE_DISTILLATION_MIN = 60  # %
 EFFICACITE_DISTILLATION_MAX = 95  # %
+EFFICACITE_DISTILLATION_DEFAULT = int(os.getenv('RHUMA_EFFICACITE_DISTILLATION', 85))  # %
+
 PV_SERRE_MAX = 500  # kWc
+PV_SERRE_DEFAULT = int(os.getenv('RHUMA_PV_SERRE', 300))  # kWc
+
 PV_SOL_MAX = 500  # kWc
+PV_SOL_DEFAULT = int(os.getenv('RHUMA_PV_SOL', 200))  # kWc
+
 TARIF_S24_MIN = 0.05  # €/kWh
 TARIF_S24_MAX = 0.20  # €/kWh
+TARIF_S24_DEFAULT = float(os.getenv('RHUMA_TARIF_S24', 0.12))  # €/kWh
+
 TVA_MIN = 0  # %
 TVA_MAX = 20  # %
-TAXES_MAX = 30  # %
-PERTES_PV_MAX = 30  # %
-PERTES_TRACKING_MAX = 30  # %
-PRIX_RHUM_MIN = 10  # €/L
-PRIX_RHUM_MAX = 50  # €/L
+TVA_DEFAULT = int(os.getenv('RHUMA_TVA', 5))  # %
+
 LIMITE_PUISSANCE_S24 = 500  # kWc
 HEURES_PLEIN_SOLEIL = 1600  # heures/an
 LIMITE_PRODUCTION_S24 = LIMITE_PUISSANCE_S24 * HEURES_PLEIN_SOLEIL  # kWh/an
 TARIF_S24_DEPASSEMENT = 0.05  # €/kWh au-delà de la limite
-
 
 class TrackingSystemSimulation:
     def __init__(self, standard_panel_efficiency=0.22):
@@ -839,7 +851,7 @@ st.sidebar.markdown("### Coûts PV")
 cout_fixe = st.sidebar.number_input(
     "Coût système PV fixe (€/kWc)",
     min_value=0,
-    value=1000,  # Prix moyen d'un système PV fixe en 2024
+    value=int(os.getenv('RHUMA_COUT_FIXE', 1000)),  # Prix moyen d'un système PV fixe en 2024
     step=100,
     help="Coût d'installation d'un système PV fixe par kWc"
 )
@@ -848,7 +860,7 @@ cout_fixe = st.sidebar.number_input(
 cout_tracking = st.sidebar.number_input(
     "Coût supplémentaire tracking (€/kWc)",
     min_value=0,
-    value=250,  # Prix moyen du système tracking en 2024
+    value=int(os.getenv('RHUMA_COUT_TRACKING', 250)),  # Prix moyen du système tracking en 2024
     step=50,
     help="Coût supplémentaire pour le système de tracking par kWc"
 )
@@ -857,7 +869,7 @@ cout_tracking = st.sidebar.number_input(
 cout_construction = st.sidebar.number_input(
     "Coût construction serre (€/m²)",
     min_value=0,
-    value=150,  # Prix moyen d'une serre standard en 2024
+    value=int(os.getenv('RHUMA_COUT_CONSTRUCTION', 150)),  # Prix moyen d'une serre standard en 2024
     step=50,
     help="Coût de construction de la serre par m². Pour une serre standard, les prix varient généralement entre 100 et 200€/m² selon les équipements."
 )
@@ -867,7 +879,7 @@ st.sidebar.markdown("### Coûts Annuels")
 cout_maintenance = st.sidebar.number_input(
     "Coût maintenance annuel (€/kWc)",
     min_value=0,
-    value=50,  # Prix moyen de maintenance en 2024
+    value=int(os.getenv('RHUMA_COUT_MAINTENANCE', 50)),  # Prix moyen de maintenance en 2024
     step=10,
     help="Coût annuel de maintenance par kWc"
 )
@@ -875,7 +887,7 @@ cout_maintenance = st.sidebar.number_input(
 cout_assurance = st.sidebar.number_input(
     "Coût assurance annuel (€/kWc)",
     min_value=0,
-    value=20,  # Prix moyen d'assurance en 2024
+    value=int(os.getenv('RHUMA_COUT_ASSURANCE', 20)),  # Prix moyen d'assurance en 2024
     step=5,
     help="Coût annuel d'assurance par kWc"
 )
@@ -883,7 +895,7 @@ cout_assurance = st.sidebar.number_input(
 cout_production = st.sidebar.number_input(
     "Coût production annuel (€/kWc)",
     min_value=0,
-    value=30,  # Prix moyen de production en 2024
+    value=int(os.getenv('RHUMA_COUT_PRODUCTION', 30)),  # Prix moyen de production en 2024
     step=5,
     help="Coût annuel de production par kWc"
 )
@@ -923,7 +935,7 @@ with cost_col1:
     tarif_s24 = st.number_input(
         "Tarif S24 (€/kWh)",
         min_value=0.0,
-        value=0.13,
+        value=float(os.getenv('RHUMA_TARIF_S24', 0.13)),
         step=0.0001,
         help="Tarif de rachat S24 pour la Corse"
     )
@@ -931,7 +943,7 @@ with cost_col1:
     tarif_heures_creuses = st.number_input(
         "Tarif Heures Creuses (€/kWh)",
         min_value=0.0,
-        value=0.15,
+        value=float(os.getenv('RHUMA_TARIF_HEURES_CREUSES', 0.15)),
         step=0.0001,
         help="Tarif d'achat pour l'autoconsommation collective"
     )
@@ -941,7 +953,7 @@ with cost_col1:
     autoconsommation_fixe = st.number_input(
         "Autoconsommation système fixe (kWh)",
         min_value=0.0,
-        value=100000.0,
+        value=float(os.getenv('RHUMA_AUTOCONSOOMMATION_FIXE', 100000.0)),
         step=1000.0,
         help="Quantité d'énergie autoconsommée par an"
     )
@@ -949,7 +961,7 @@ with cost_col1:
     autoconsommation_tracking = st.number_input(
         "Autoconsommation système tracking (kWh)",
         min_value=0.0,
-        value=120000.0,
+        value=float(os.getenv('RHUMA_AUTOCONSOOMMATION_TRACKING', 120000.0)),
         step=1000.0,
         help="Quantité d'énergie autoconsommée par an"
     )
@@ -959,7 +971,7 @@ with cost_col2:
     prix_rhum = st.number_input(
         "Prix du rhum (€/L)",
         min_value=0.0,
-        value=20.0,
+        value=float(os.getenv('RHUMA_PRIX_RHUM', 20.0)),
         step=1.0,
         help="Prix de vente du rhum"
     )
@@ -975,7 +987,7 @@ with tech_col1:
     puissance_pv = st.number_input(
         "Puissance installée (kWc)",
         min_value=0.0,
-        value=500.0,
+        value=int(os.getenv('RHUMA_PUISSANCE_PV', 500.0)),
         step=50.0,
         help="Puissance totale du système PV"
     )
@@ -984,7 +996,7 @@ with tech_col1:
         "Pertes PV (%)",
         min_value=0.0,
         max_value=100.0,
-        value=10.0,
+        value=int(os.getenv('RHUMA_PERTES_PV', 10.0)),
         step=1.0,
         help="Pertes techniques du système PV"
     )
@@ -995,7 +1007,7 @@ with tech_col2:
         "Pertes de tracking (%)",
         min_value=0.0,
         max_value=100.0,
-        value=5.0,
+        value=int(os.getenv('RHUMA_PERTES_TRACKING', 5.0)),
         step=1.0,
         help="Pertes dues au système de tracking"
     )
@@ -1004,7 +1016,7 @@ with tech_col2:
         "Précision tracking (°)",
         min_value=0.0,
         max_value=5.0,
-        value=0.2,
+        value=float(os.getenv('RHUMA_PRECISION_TRACKING', 0.2)),
         step=0.1,
         help="Précision du système de tracking"
     )
@@ -1019,7 +1031,7 @@ with econ_col1:
         "Taux d'intérêt annuel (%)",
         min_value=0.0,
         max_value=100.0,
-        value=3.0,
+        value=float(os.getenv('RHUMA_TAUX_INTERET', 3.0)),
         step=0.1,
         help="Taux d'intérêt annuel pour le calcul du ROI"
     )
@@ -1028,7 +1040,7 @@ with econ_col1:
         "Durée d'amortissement (ans)",
         min_value=1,
         max_value=30,
-        value=20,
+        value=int(os.getenv('RHUMA_DUREE_AMORTISSEMENT', 20)),
         step=1,
         help="Durée sur laquelle l'investissement est amorti"
     )
@@ -1037,7 +1049,7 @@ with econ_col2:
     cout_production = st.number_input(
         "Coût production annuel (€/kWc)",
         min_value=0.0,
-        value=30.0,
+        value=float(os.getenv('RHUMA_COUT_PRODUCTION', 30.0)),
         step=1.0,
         help="Coût annuel de production de la canne à sucre et distillation"
     )
@@ -1045,7 +1057,7 @@ with econ_col2:
     prix_alcool = st.number_input(
         "Prix de l'alcool (€/L)",
         min_value=0.0,
-        value=20.0,
+        value=float(os.getenv('RHUMA_PRIX_ALCOOL', 20.0)),
         step=1.0,
         help="Prix de vente de l'alcool"
     )
@@ -1053,36 +1065,36 @@ with econ_col2:
 # 1. Surface et Rendement
 surface_canne = st.sidebar.number_input("Surface dédiée à la canne (m²)", 
                                       SURFACE_CANNE_MIN, SURFACE_CANNE_MAX, 
-                                      SURFACE_CANNE_MIN)
+                                      SURFACE_CANNE_DEFAULT)
 rendement_canne = st.sidebar.slider("Rendement canne (t/ha)", 
                                   RENDEMENT_CANNE_MIN, RENDEMENT_CANNE_MAX, 
-                                  120)
+                                  RENDEMENT_CANNE_DEFAULT)
 teneur_sucre = st.sidebar.slider("Teneur en sucre (%)", 
                               TENEUR_SUCRE_MIN, TENEUR_SUCRE_MAX, 
-                              18)
+                              TENEUR_SUCRE_DEFAULT)
 
 # 2. Extraction et Distillation
 efficacite_extraction = st.sidebar.slider("Efficacité extraction (%)", 
                                       EFFICACITE_EXTRACTION_MIN, 
                                       EFFICACITE_EXTRACTION_MAX, 
-                                      85)
+                                      EFFICACITE_EXTRACTION_DEFAULT)
 efficacite_distillation = st.sidebar.slider("Efficacité distillation (%)", 
                                         EFFICACITE_DISTILLATION_MIN, 
                                         EFFICACITE_DISTILLATION_MAX, 
-                                        90)
+                                        EFFICACITE_DISTILLATION_DEFAULT)
 
 # 3. Énergie PV
 puissance_pv = st.sidebar.number_input("Puissance PV (serre) (kWc)", 
                                     100, PV_SERRE_MAX, 
-                                    PV_SERRE_MAX,
+                                    PV_SERRE_DEFAULT,
                                     help=f"Limite légale : {LIMITE_PUISSANCE_S24} kWc pour bénéficier du tarif S24")
 tarif_s24 = st.sidebar.number_input("Tarif S24 (€/kWh)", 
                                  TARIF_S24_MIN, TARIF_S24_MAX, 
-                                 0.13,
+                                 TARIF_S24_DEFAULT,
                                  help="Tarif garanti pour la vente d'électricité")
 tarif_tva = st.sidebar.number_input("TVA (%)", 
                                  TVA_MIN, TVA_MAX, 
-                                 20)
+                                 TVA_DEFAULT)
 tarif_taxes = st.sidebar.number_input("Taxes (%)", 
                                   0, TAXES_MAX, 
                                   0)
@@ -1105,13 +1117,13 @@ pertes_tracking = st.sidebar.slider("Pertes de tracking (%)",
                                  help="Pertes liées à l'absence de trackers solaires")
 prix_alcool = st.sidebar.number_input("Prix de l'alcool (€/L)", 
                                     PRIX_RHUM_MIN, PRIX_RHUM_MAX, 
-                                    20,
+                                    PRIX_RHUM_MIN,
                                  help="L'alcool n'est qu'une partie du prix du rhum, s'ajoute d'autres coûts et taxes")
 
 # 5. Énergie PV au sol
 capacite_au_sol = st.sidebar.number_input("Capacité PV (au sol) (kWc)", 
                                           100, PV_SOL_MAX, 
-                                          PV_SOL_MAX,
+                                          PV_SOL_DEFAULT,
                                           help="Production supplémentaire grâce aux panneaux au sol")
 
 # 6. Limites réglementaires
