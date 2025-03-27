@@ -1,7 +1,7 @@
 # Rhumba Deployment Guide
 
 ## Deployment Overview
-Comprehensive guide for deploying the Rhumba rhum production optimization system in a greenhouse environment.
+Comprehensive guide for deploying the Rhuma rhum production optimization system in a greenhouse environment.
 
 ## Prerequisites
 
@@ -12,10 +12,10 @@ Comprehensive guide for deploying the Rhumba rhum production optimization system
 - Compute infrastructure (local or cloud)
 
 ### Software Requirements
-- Node.js (v18+ recommended)
+- Node.js (v18+ recommended), some Python
 - Docker
 - Kubernetes
-- MongoDB
+- Postgress SQL database
 - WebSocket-compatible infrastructure
 
 ## Deployment Stages
@@ -30,9 +30,9 @@ Comprehensive guide for deploying the Rhumba rhum production optimization system
 
 #### 2.1 Core System Installation
 ```bash
-# Clone the Rhumba repository
-git clone https://github.com/JeanHuguesRobert/Rhumba.git
-cd rhumba
+# Clone the Rhuma repository
+git clone https://github.com/JeanHuguesRobert/Rhuma.git
+cd rhuma
 
 # Install dependencies
 npm install
@@ -64,36 +64,35 @@ kubectl get services
 ## Configuration
 
 ### Environment Variables
-- `GREENHOUSE_LOCATION`: Corti, Corsica
-- `SOLAR_PANEL_CAPACITY`: Specific to installation
-- `PRODUCTION_OPTIMIZATION_LEVEL`: Tuning parameter
-- `DATA_RETENTION_PERIOD`: Logging and analytics configuration
+- .env files
+- RHUMA_ prefixed variables
+- Described elsewhere (ToDo: where?)
 
 ## Monitoring and Logging
 
-### Logging Setup
+### Logging Setup - ToDo
 - Centralized logging system
 - Performance metric collection
 - Real-time monitoring dashboard
 
-### Health Checks
+### Health Checks - ToDo
 - Service availability monitoring
 - Performance threshold alerts
 - Automated diagnostic reporting
 
-## Scaling Considerations
+## Scaling Considerations - ToDo
 - Horizontal scaling configuration
 - Resource allocation strategies
 - Multi-instance deployment support
 
 ## Troubleshooting
 
-### Common Deployment Issues
+### Common Deployment Issues - ToDo
 - Sensor connectivity problems
 - Data synchronization challenges
 - Performance bottlenecks
 
-### Diagnostic Commands
+### Diagnostic Commands - ToDo
 ```bash
 # Check system health
 npm run diagnostic
@@ -105,18 +104,18 @@ docker logs rhumba-core-service
 kubectl top pods
 ```
 
-## Security Considerations
+## Security Considerations - ToDo
 - Secure API endpoints
 - Encryption of sensitive data
 - Role-based access control
 - Regular security audits
 
-## Post-Deployment Validation
+## Post-Deployment Validation - ToDo
 - Sensor network verification
 - Initial performance baseline
 - Optimization algorithm testing
 
-## Maintenance
+## Maintenance - ToDo
 
 ### Regular Updates
 - Software patches
@@ -128,23 +127,23 @@ kubectl top pods
 - Performance optimization
 - Sensor network recalibration
 
-## Rollback Procedure
+## Rollback Procedure - ToDo
 ```bash
 # Rollback to previous stable version
 kubectl rollout undo deployment/rhumba-core
 ```
 
-## Documentation and Support
+## Documentation and Support - ToDo
 - Maintain detailed deployment logs
 - Create support documentation
 - Establish communication channels for technical support
 
-## Future Deployment Considerations
+## Future Deployment Considerations - ToDo
 - Multi-site expansion
 - Cloud migration strategies
 - Advanced IoT integration
 
-## Additional Deployment Options
+## Additional Deployment Options - ToDo
 
 ### Streamlit Deployment
 
