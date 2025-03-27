@@ -1,5 +1,7 @@
 const axios = require('axios');
 const commander = require('commander');
+const jsPDF = require('jspdf');
+const { JSDOM } = require('jsdom');
 
 // Configuration de base
 const BASE_URL = 'https://re.jrc.ec.europa.eu/api';
@@ -31,15 +33,19 @@ class PVGISClient {
                 lon: system.longitude,
                 peakpower: system.peakPower,
                 loss: system.losses,
-                outputformat: 'json'
+                outputformat: 'json',
+                raddatabase: 'PVGIS-SARAH',
+                mountingplace: 'free',
+                angle: system.angle,
+                aspect: system.aspect,
+                components: 1,
+                usehorizon: 1,
+                optimalangles: 1,
+                optimalinclination: 1
             };
 
             if (system.isTracking) {
                 params.trackingtype = 1;
-                params.angle = system.angle;
-                params.aspect = system.aspect;
-            } else {
-                params.optimalinclination = system.useOptimalAngle ? 1 : 0;
                 params.angle = system.angle;
                 params.aspect = system.aspect;
             }
@@ -53,54 +59,143 @@ class PVGISClient {
                 );
             }
 
-            return this.parsePVResult(response.data);
+            return this.processResults(response.data);
         } catch (error) {
-            if (error instanceof PVError) {
-                throw error;
-            }
-            throw new PVError(`Erreur de communication avec PVGIS: ${error.message}`);
+            throw error;
         }
     }
 
-    async getMonthlyRadiation(latitude, longitude) {
-        try {
-            const response = await this.client.get('/MRcalc', {
-                params: {
-                    lat: latitude,
-                    lon: longitude,
-                    outputformat: 'json'
-                }
-            });
-
-            if (response.status >= 400) {
-                throw new PVError(
-                    `Erreur API PVGIS (${response.status}): ${response.statusText}`,
-                    response.status
-                );
-            }
-
-            return response.data;
-        } catch (error) {
-            if (error instanceof PVError) {
-                throw error;
-            }
-            throw new PVError(`Erreur de communication avec PVGIS: ${error.message}`);
-        }
-    }
-
-    parsePVResult(data) {
-        const monthlyProduction = {};
-        if (data.outputs?.monthly) {
-            Object.entries(data.outputs.monthly).forEach(([month, value]) => {
-                monthlyProduction[month] = value.E_m;
-            });
-        }
-
+    processResults(data) {
         return {
-            monthlyProduction,
-            annualProduction: data.outputs?.totals?.fixed?.E_y || 0,
-            optimalAngle: data.outputs?.optimalangles?.angle
+            monthly_production: data.outputs.pv.monthly,
+            annual_production: data.outputs.pv.year,
+            optimal_angle: this.calculateOptimalAngle(data.inputs.lat),
+            financial_analysis: this.calculateFinancialAnalysis(data),
+            comparison: this.generateComparison(data)
         };
+    }
+
+    calculateOptimalAngle(latitude) {
+        // Formule simplifiée pour l'angle optimal
+        return Math.round(latitude * 0.9 + 2.3);
+    }
+
+    calculateFinancialAnalysis(data) {
+        const annualProduction = data.outputs.pv.year;
+        const systemCost = this.calculateSystemCost(data.inputs.peakpower);
+        const maintenanceCost = this.calculateMaintenanceCost(data.inputs.peakpower);
+        const revenue = this.calculateRevenue(annualProduction);
+        
+        return {
+            system_cost: systemCost,
+            maintenance_cost: maintenanceCost,
+            revenue: revenue,
+            roi: this.calculateROI(systemCost, revenue),
+            payback_period: this.calculatePaybackPeriod(systemCost, revenue)
+        };
+    }
+
+    calculateSystemCost(peakPower) {
+        // Prix moyen par kWc (2025) - à ajuster selon la région
+        return peakPower * 1500; // €/kWc
+    }
+
+    calculateMaintenanceCost(peakPower) {
+        // Coût annuel de maintenance - 1% du coût du système
+        return this.calculateSystemCost(peakPower) * 0.01;
+    }
+
+    calculateRevenue(annualProduction) {
+        // Prix moyen de l'électricité - à ajuster selon le tarif
+        return annualProduction * 0.12; // €/kWh
+    }
+
+    calculateROI(systemCost, annualRevenue) {
+        return (annualRevenue / systemCost) * 100;
+    }
+
+    calculatePaybackPeriod(systemCost, annualRevenue) {
+        return systemCost / annualRevenue;
+    }
+
+    generateComparison(data) {
+        const fixedData = this.getFixedSystemData(data);
+        const trackingData = this.getTrackingSystemData(data);
+        
+        return {
+            fixed: fixedData,
+            tracking: trackingData,
+            gain_percentage: this.calculateGainPercentage(fixedData, trackingData)
+        };
+    }
+
+    getFixedSystemData(data) {
+        return {
+            production: data.outputs.pv.year,
+            cost: this.calculateSystemCost(data.inputs.peakpower),
+            roi: this.calculateROI(
+                this.calculateSystemCost(data.inputs.peakpower),
+                this.calculateRevenue(data.outputs.pv.year)
+            )
+        };
+    }
+
+    getTrackingSystemData(data) {
+        // Simulation avec tracking
+        const trackingFactor = 1.3; // Facteur moyen de gain avec tracking
+        const trackingProduction = data.outputs.pv.year * trackingFactor;
+        
+        return {
+            production: trackingProduction,
+            cost: this.calculateSystemCost(data.inputs.peakpower) * 1.2, // Coût +20% avec tracking
+            roi: this.calculateROI(
+                this.calculateSystemCost(data.inputs.peakpower) * 1.2,
+                this.calculateRevenue(trackingProduction)
+            )
+        };
+    }
+
+    calculateGainPercentage(fixed, tracking) {
+        return ((tracking.production - fixed.production) / fixed.production) * 100;
+    }
+
+    async generateReport(data) {
+        const doc = new jsPDF();
+        
+        // Ajouter les données du rapport
+        doc.text("Analyse PVGIS - Rapport d'Optimisation", 10, 10);
+        
+        // Ajouter les graphiques
+        await this.addChartsToPDF(doc, data);
+        
+        // Ajouter l'analyse financière
+        await this.addFinancialAnalysis(doc, data);
+        
+        // Sauvegarder le PDF
+        const pdfBuffer = doc.output('arraybuffer');
+        return Buffer.from(pdfBuffer);
+    }
+
+    async addChartsToPDF(doc, data) {
+        // Créer un graphique de production mensuelle
+        const chart = await this.createMonthlyProductionChart(data);
+        doc.addImage(chart, 'PNG', 15, 40, 180, 90);
+    }
+
+    async createMonthlyProductionChart(data) {
+        // À implémenter avec une bibliothèque de graphiques
+        return Promise.resolve('chart.png');
+    }
+
+    async addFinancialAnalysis(doc, data) {
+        // Ajouter un tableau d'analyse financière
+        const table = await this.createFinancialTable(data);
+        doc.addImage(table, 'PNG', 15, 140, 180, 90);
+    }
+
+    async createFinancialTable(data) {
+        // À implémenter avec une bibliothèque de tableaux
+        return Promise.resolve('table.png');
     }
 }
 

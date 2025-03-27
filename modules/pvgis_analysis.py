@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from modules.pvgis.pvgis import PVGIS  # Import du module PVGIS local
+import subprocess
+import json
 from modules.rhuma_state import rhuma
 
 def pvgis_analysis_section(rhuma_state):
@@ -34,96 +35,86 @@ def pvgis_analysis_section(rhuma_state):
             orientation = st.slider("Orientation (°)", -180, 180, -180)
             tracking = st.checkbox("Utiliser le suivi de soleil")
             
+    # Carte interactive
+    st.subheader("🗺️ Localisation")
+    location_data = pd.DataFrame({
+        'latitude': [latitude],
+        'longitude': [longitude]
+    })
+    st.map(location_data, zoom=12)
+    
     # Bouton d'analyse
     if st.button("🔍 Analyser"):
         with st.spinner("Analyse en cours..."):
-            # Initialiser l'API PVGIS
-            pvgis = PVGIS()
-            
             # Préparer les paramètres avec l'état RHUMA
             params = {
                 'latitude': latitude,
                 'longitude': longitude,
-                'capacity': capacity,
-                'tilt': tilt,
-                'orientation': orientation,
-                'tracking': tracking,
+                'peakPower': capacity,
+                'angle': tilt,
+                'aspect': orientation,
+                'isTracking': tracking,
+                'losses': 14,  # Perte standard de 14%
                 'rhuma_state': rhuma_state
             }
             
-            # Appeler l'API avec les paramètres configurés
-            result = pvgis.calculate(
-                latitude=latitude,
-                longitude=longitude,
-                capacity=capacity,
-                tilt=tilt,
-                orientation=orientation,
-                tracking=tracking,
-                rhuma_state=rhuma_state
-            )
-            
-            # Extraire les données de production
-            monthly_production = result.get('monthly_production', {})
-            total_production = result.get('total_production', 0)
-            
-            # Affichage des résultats
-            with st.expander("📊 Résultats de l'Analyse"):
-                col1, col2 = st.columns(2)
+            # Appeler pvgis.js avec les paramètres
+            try:
+                result = subprocess.run(
+                    ['node', 'modules/pvgis/pvgis.js', json.dumps(params)],
+                    capture_output=True,
+                    text=True,
+                    check=True
+                )
                 
-                with col1:
-                    st.metric("Production annuelle", f"{total_production/1000:.2f} MWh")
-                    st.metric("Irradiation moyenne", f"{result.get('irradiation', 0):.2f} kWh/m²")
-                    
-                with col2:
-                    st.metric("Facteur de charge", f"{result.get('load_factor', 0):.2f}")
-                    st.metric("Temps de retour", f"{result.get('payback_time', 0):.1f} ans")
-            
-            # Graphique de production mensuelle
-            if monthly_production:
-                st.subheader("📈 Production Mensuelle")
-                months = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"]
-                fig, ax = plt.subplots(figsize=(12, 6))
-                ax.bar(months, [monthly_production.get(i, 0)/1000 for i in range(1, 13)])
-                ax.set_ylabel("Production mensuelle (MWh)")
-                ax.set_title("Distribution de la production mensuelle")
-                st.pyplot(fig)
-            
-            # Comparaison système fixe vs tracking
-            if tracking:
-                st.subheader("📊 Comparaison Système Fixe vs Tracking")
+                # Analyser la sortie JSON
+                result_data = json.loads(result.stdout)
                 
-                # Récupérer les données de comparaison
-                tracking_data = result.get('tracking_comparison', {})
-                if tracking_data:
-                    # Graphique comparatif
-                    fig2, ax2 = plt.subplots(figsize=(12, 6))
-                    ax2.bar([
-                        "Système Fixe", 
-                        "Tracking"
-                    ], 
-                    [
-                        tracking_data.get('fixed_production', 0)/1000,
-                        tracking_data.get('tracking_production', 0)/1000
-                    ],
-                    color=["#4CAF50", "#FFC107"])
-                    ax2.set_ylabel("Production annuelle (MWh)")
-                    ax2.set_title("Comparaison de la production annuelle")
-                    st.pyplot(fig2)
-                    
-                    # Tableau de comparaison
-                    comparison = pd.DataFrame({
-                        "Système": ["Fixe", "Tracking"],
-                        "Production annuelle (MWh)": [
-                            f"{tracking_data.get('fixed_production', 0)/1000:.2f}",
-                            f"{tracking_data.get('tracking_production', 0)/1000:.2f}"
-                        ],
-                        "Gain de production": [
-                            "0%",
-                            f"{tracking_data.get('gain_percentage', 0):.1f}%"
-                        ],
-                        "Revenu annuel (k€)": [
-                            f"{(tracking_data.get('fixed_production', 0)*rhuma('tarif_s24'))/1000:.2f}",
-                            f"{(tracking_data.get('tracking_production', 0)*rhuma('tarif_s24'))/1000:.2f}"
-                        ]
+                # Afficher les résultats
+                st.subheader("📊 Résultats")
+                
+                # Configuration optimale
+                with st.expander("🎯 Configuration Optimale"):
+                    st.metric("Angle optimal", f"{result_data['optimal_angle']}°")
+                    st.metric("Production annuelle", f"{result_data['annual_production']:,.0f} kWh")
+                
+                # Production mensuelle
+                if result_data.get('monthly_production'):
+                    st.subheader("📈 Production Mensuelle")
+                    st.line_chart({
+                        'Production mensuelle (kWh)': result_data['monthly_production']
                     })
-                    st.dataframe(comparison, hide_index=True)
+                
+                # Analyse financière
+                if result_data.get('financial_analysis'):
+                    with st.expander("💰 Analyse Financière"):
+                        fa = result_data['financial_analysis']
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("Coût du système", f"{fa['system_cost']:,.0f} €")
+                        with col2:
+                            st.metric("ROI annuel", f"{fa['roi']:.1f}%")
+                        with col3:
+                            st.metric("Temps de retour", f"{fa['payback_period']:.1f} ans")
+                
+                # Comparaison système fixe vs tracking
+                if result_data.get('comparison'):
+                    with st.expander("📊 Comparaison Systèmes"):
+                        comp = result_data['comparison']
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.metric("Production fixe", f"{comp['fixed']['production']:,.0f} kWh")
+                            st.metric("Coût fixe", f"{comp['fixed']['cost']:,.0f} €")
+                            st.metric("ROI fixe", f"{comp['fixed']['roi']:.1f}%")
+                        with col2:
+                            st.metric("Production tracking", f"{comp['tracking']['production']:,.0f} kWh")
+                            st.metric("Coût tracking", f"{comp['tracking']['cost']:,.0f} €")
+                            st.metric("ROI tracking", f"{comp['tracking']['roi']:.1f}%")
+                        st.metric("Gain de production", f"{comp['gain_percentage']:.1f}%")
+                
+            except subprocess.CalledProcessError as e:
+                st.error(f"Erreur lors de l'analyse PVGIS: {e.stderr}")
+            except json.JSONDecodeError:
+                st.error("Erreur lors de la lecture des résultats")
+            except Exception as e:
+                st.error(f"Erreur inattendue: {str(e)}")
