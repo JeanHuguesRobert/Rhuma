@@ -1,0 +1,43 @@
+{
+  "name": "@acorsica/pvgis",
+  "version": "1.0.0",
+  "description": "Client JavaScript pour l'API PVGIS (Photovoltaic Geographical Information System) avec interface CLI",
+  "main": "pvgis.js",
+  "bin": {
+    "pvgis": "pvgis.js"
+  },
+  "keywords": [
+    "pvgis",
+    "pv",
+    "solar",
+    "api",
+    "client",
+    "acorsica",
+    "corsica",
+    "institut-mariani"
+  ],
+  "author": "ACORSICA",
+  "contributors": [
+    {
+      "name": "Jean Hugues Robert",
+      "email": "jeanhuguesrobert@gmail.com"
+    }
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.5",
+    "commander": "^11.1.0"
+  },
+  "scripts": {
+    "test": "jest",
+    "build": "npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/acorsica/pvgis.git"
+  },
+  "bugs": {
+    "url": "https://github.com/acorsica/pvgis/issues"
+  },
+  "homepage": "https://github.com/acorsica/pvgis"
+}

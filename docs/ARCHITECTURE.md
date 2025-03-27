@@ -111,6 +111,11 @@ The system's technical architecture has been updated to include the following co
 
 ```
 rhuma/
+├── modules/          # Modules
+│   ├── data_export.py    # Export des données
+│   ├── pvgis_analysis.py # Analyse PVGIS
+│   ├── attributes.py     # Configuration des attributs
+│   └── state_manager.py  # Gestionnaire d'état
 ├── docs/             # Documentation
 └── tests/            # Tests
 ```
@@ -229,3 +234,120 @@ cp .env.example .env
 ```
 
 Puis remplacez les valeurs par défaut par vos propres configurations.
+
+## 🏗️ Architecture du Projet Rhuma
+
+## 🎯 Objectif
+
+L'architecture de Rhuma est conçue pour optimiser la production de rhum dans une serre solaire, avec une première implémentation à Corte, en Corse.
+
+## 🏗️ Structure du Projet
+
+```
+rhuma/
+├── modules/          # Modules
+│   ├── data_export.py    # Export des données
+│   ├── pvgis_analysis.py # Analyse PVGIS
+│   ├── attributes.py     # Configuration des attributs
+│   └── state_manager.py  # Gestionnaire d'état
+├── docs/             # Documentation
+└── tests/            # Tests
+```
+
+## 🛠️ Technologie
+
+### Backend
+- Python
+- Streamlit
+- Pandas
+- NumPy
+- Matplotlib
+- gspread
+- oauth2client
+
+### Frontend
+- Streamlit UI
+- Components personnalisés
+- Internationalisation (i18n)
+
+### Base de Données
+- Google Sheets (via API)
+- Configuration locale (.env)
+
+## 📋 Configuration
+
+### Variables d'Environnement
+
+- `RHUMA_ID` : ID technique
+- `RHUMA_LABEL` : Nom affiché
+- `RHUMA_VERSION` : Version
+- `RHUMA_LANGUAGE` : Langue
+- `GOOGLE_SHEETS_CREDENTIALS_FILE` : Fichier de credentials
+
+### Paramètres de Simulation
+
+- **Production**
+  - Surface canne : 0-10000 m²
+  - Rendement canne : 80-160 t/ha
+  - Teneur sucre : 12-20%
+  - Efficacité extraction : 60-90%
+  - Efficacité distillation : 70-95%
+
+- **Énergie PV**
+  - Puissance serre : 0-1000 kWc
+  - Puissance sol : 0-1000 kWc
+  - Tarif S24 : 0.05-0.20 €/kWh
+  - TVA : 0-20%
+
+- **Coûts**
+  - PV fixe : 1000€/kWc
+  - Tracking : 250€/kWc
+  - Serre : 150€/m²
+  - Maintenance : 50€/kWc/an
+  - Assurance : 20€/kWc/an
+  - Production : 30€/kWc/an
+
+## 📊 Métriques
+
+### Production
+
+- Volume annuel de rhum
+- Production PV
+- Autoconsommation
+- Revenus énergétiques
+
+### Finances
+
+- Investissement initial
+- Coûts annuels
+- Revenus
+- ROI
+- Durée d'amortissement
+
+## 🔄 Maintenance
+
+### Mises à Jour
+
+- Dépendances Python
+- API Google Sheets
+- Modèles de simulation
+
+### Sauvegarde
+
+- Configuration
+- Données de simulation
+- Historique
+
+## 📈 Monitoring
+
+### Logs
+
+- Démarrage
+- Erreurs
+- Activité
+
+### Métriques
+
+- Performance
+- Utilisation
+- Erreurs

@@ -148,187 +148,141 @@ kubectl rollout undo deployment/rhumba-core
 
 ### Streamlit Deployment
 
-```bash
-# 🚀 Guide de Déploiement
+# 📅 Déploiement du Projet Rhuma
 
-## 📋 Prérequis
+## 📋 Vue d'ensemble
 
-### 1. Environnement Python
-- Python 3.8+
-- pip
-- virtualenv
+Le projet Rhuma est une application de simulation et d'optimisation de la production de rhum solaire en Corse. Cette documentation fournit les informations nécessaires pour son déploiement et sa maintenance.
 
-### 2. Dépendances
-- Streamlit
-- Pandas
-- NumPy
-- Matplotlib
-- gspread
-- oauth2client
-- python-dotenv
-- requests
-- plotly
-- scipy
-- pytest
-- black
-- isort
+## 🛠️ Configuration
 
-## 📦 Installation
-
-```bash
-# 1. Créer un environnement virtuel
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
-
-# 2. Installer les dépendances
-pip install -r requirements.txt
-
-# 3. Installer les outils de développement
-pip install pytest black isort
-```
-
-## 📁 Structure du Projet
+### 1. Structure du Projet
 
 ```
 rhuma/
-├── src/
-│   ├── data/         # Données et configurations
-│   ├── models/       # Modèles de simulation
-│   │   ├── energy/    # Modèles énergie
-│   │   ├── production/ # Modèles production
-│   │   └── financial/  # Modèles financiers
-│   └── utils/        # Utilitaires
+├── modules/          # Modules
+│   ├── data_export.py    # Export des données
+│   ├── pvgis_analysis.py # Analyse PVGIS
+│   ├── attributes.py     # Configuration des attributs
+│   └── state_manager.py  # Gestionnaire d'état
 ├── docs/             # Documentation
 └── tests/            # Tests
 ```
 
-## 🚀 Déploiement Local
+### 2. Configuration des Variables d'Environnement
 
 ```bash
-# 1. Configurer les variables d'environnement
-export GOOGLE_SHEETS_CREDENTIALS="path/to/credentials.json"
+# .env
+RHUMA_ID=rhuma
+RHUMA_LABEL="Rhum Solaire de Corse"
+RHUMA_VERSION="1.0.0"
+RHUMA_LANGUAGE=fr
 
-# 2. Lancer l'application
-streamlit run streamlit_app.py
+# API Keys
+PVGIS_API_KEY=v3.1
+
+# Google Sheets
+GOOGLE_SHEETS_CREDENTIALS_FILE=credentials.json
 ```
 
-## 🌐 Déploiement Cloud
+### 3. Structure des Données
 
-### 1. Streamlit Cloud
+```json
+{
+  "metadata": {
+    "id": "rhuma",
+    "label": "Rhum Solaire de Corse",
+    "version": "1.0.0",
+    "timestamp": "2025-03-27T08:45:20+01:00",
+    "language": "fr"
+  },
+  "configuration": {
+    "surface_canne": 3000,
+    "rendement_canne": 120,
+    "teneur_sucre": 15,
+    "efficacite_extraction": 80,
+    "efficacite_distillation": 85,
+    "pv_serre": 300,
+    "pv_sol": 200,
+    "tarif_s24": 0.12,
+    "tva": 5
+  }
+}
+```
+
+## 🚀 Déploiement
+
+### 1. Prérequis
 
 ```bash
-# 1. Créer un compte Streamlit Cloud
-# 2. Configurer les variables d'environnement
-# 3. Déployer l'application
+# Installer les dépendances
+pip install streamlit pandas matplotlib numpy gspread oauth2client
+
+# Initialiser l'environnement
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+.\venv\Scripts\activate  # Windows
 ```
 
-### 2. Heroku
+### 2. Configuration Google Sheets
 
 ```bash
-# 1. Créer une application Heroku
-# 2. Configurer les variables d'environnement
-# 3. Déployer l'application
+# Créer un projet Google Cloud
+gcloud projects create rhuma-project
+
+gcloud services enable sheets.googleapis.com
+
+gcloud iam service-accounts create rhuma-sa
+
+gcloud iam service-accounts keys create credentials.json \
+  --iam-account rhuma-sa@rhuma-project.iam.gserviceaccount.com
 ```
 
-## 🔐 Configuration Google Sheets
+### 3. Déploiement Heroku
 
-1. Créer un projet Google Cloud
-2. Activer l'API Google Sheets
-3. Créer des credentials
-4. Configurer les permissions
-5. Placer le fichier `credentials.json` dans le répertoire
+```bash
+# Créer une application Heroku
+heroku create rhuma-app
 
-## 🛠️ Maintenance
+# Configurer les variables d'environnement
+heroku config:set RHUMA_ID=rhuma
+heroku config:set RHUMA_LABEL="Rhum Solaire de Corse"
 
-### 1. Mises à jour
-- Mise à jour des dépendances
-- Mise à jour des API
-- Mise à jour des modèles
+# Déployer l'application
+git push heroku main
+```
+
+## 🔄 Maintenance
+
+### 1. Mises à Jour
+
+```bash
+# Mettre à jour les dépendances
+pip install --upgrade pip
+pip install --upgrade streamlit pandas numpy
+```
 
 ### 2. Sauvegarde
-- Sauvegarde des données
-- Sauvegarde des configurations
-- Sauvegarde des résultats
 
-## 📊 Monitoring
+- Sauvegarde quotidienne des configurations
+- Sauvegarde hebdomadaire des résultats
+- Archivage mensuel des rapports
+
+## 📊 Surveillance
 
 ### 1. Logs
-- Logs d'application
+
+- Logs de démarrage
 - Logs d'erreurs
 - Logs d'activité
 
 ### 2. Métriques
-- Temps de réponse
-- Utilisation des ressources
-- Nombre d'utilisateurs
-```
-
-### Local Deployment
-
-```bash
-# 1. Configurer les variables d'environnement
-export GOOGLE_SHEETS_CREDENTIALS="path/to/credentials.json"
-
-# 2. Lancer l'application
-streamlit run streamlit_app.py
-```
-
-### Cloud Deployment
-
-#### Streamlit Cloud
-
-```bash
-# 1. Créer un compte Streamlit Cloud
-# 2. Configurer les variables d'environnement
-# 3. Déployer l'application
-```
-
-#### Heroku
-
-```bash
-# 1. Créer une application Heroku
-# 2. Configurer les variables d'environnement
-# 3. Déployer l'application
-```
-
-### Google Sheets Configuration
-
-1. Créer un projet Google Cloud
-2. Activer l'API Google Sheets
-3. Créer des credentials
-4. Configurer les permissions
-5. Placer le fichier `credentials.json` dans le répertoire
-
-### Maintenance
-
-#### Updates
-
-- Mise à jour des dépendances
-- Mise à jour des API
-- Mise à jour des modèles
-
-#### Backup
-
-- Sauvegarde des données
-- Sauvegarde des configurations
-- Sauvegarde des résultats
-
-### Monitoring
-
-#### Logs
-
-- Logs d'application
-- Logs d'erreurs
-- Logs d'activité
-
-#### Metrics
 
 - Temps de réponse
 - Utilisation des ressources
 - Nombre d'utilisateurs
 
-### Docker Deployment (Optional)
+## 🐳 Déploiement Docker (Optionnel)
 
 ```bash
 # 1. Cloner le dépôt
@@ -343,3 +297,4 @@ gh repo create votre-nom-de-projet --public
 git remote rename origin upstream
 git remote add origin https://github.com/votre-username/votre-nom-de-projet.git
 git push -u origin main
+```

@@ -1,10 +1,10 @@
-# 🌺 Rhum Solaire de Corse
+# 📋 Rhuma - Simulateur de Production de Rhum Solaire
 
 ## 🎯 Description
 
-Simulateur de production de rhum sous serre solaire à Corte, Corse. L'application permet de simuler et optimiser la production de rhum en tenant compte des aspects énergétiques, agricoles et financiers.
+Rhuma est un simulateur de production de rhum sous serre solaire en Corse. L'application permet de simuler et optimiser la production de rhum en tenant compte des aspects énergétiques, agricoles et financiers.
 
-## 📊 Fonctionnalités
+## 🚀 Fonctionnalités
 
 - Simulation de la production PV avec tracking
 - Simulation de la croissance de la canne
@@ -13,7 +13,7 @@ Simulateur de production de rhum sous serre solaire à Corte, Corse. L'applicati
 - Export des résultats vers JSON et Google Sheets
 - Documentation intégrée
 
-## 🚀 Installation
+## 🛠️ Installation
 
 ### 1. Cloner le Projet
 
@@ -22,111 +22,108 @@ git clone https://github.com/JeanHuguesRobert/Rhuma.git
 cd Rhuma
 ```
 
-### 2. Bootstrap (Linux/Mac)
+### 2. Configuration de l'Environnement
 
 ```bash
-chmod +x bootstrap.sh
-./bootstrap.sh
-```
+# Créer un environnement virtuel
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+.\venv\Scripts\activate  # Windows
 
-### 2. Bootstrap (Windows)
-
-```bash
-bootstrap.bat
+# Installer les dépendances
+pip install streamlit pandas matplotlib numpy gspread oauth2client
 ```
 
 ### 3. Lancer l'Application
 
 ```bash
-npm start
-```
-
-## 🛠️ Démarrage
-
-```bash
-# Lancer l'application
 streamlit run streamlit_app.py
 ```
-
-## 📊 Configuration
-
-### Variables d'Environnement
-
-Le projet utilise des variables d'environnement pour la configuration. Les principales variables sont :
-
-#### Google Sheets
-
-Les variables pour la configuration de Google Sheets sont préfixées par `RHUMA_GOOGLE_SHEETS_` :
-
-- `RHUMA_GOOGLE_SHEETS_TYPE` : Type de compte de service ("service_account")
-- `RHUMA_GOOGLE_SHEETS_PROJECT_ID` : ID du projet Google Cloud
-- `RHUMA_GOOGLE_SHEETS_PRIVATE_KEY_ID` : ID de la clé privée
-- `RHUMA_GOOGLE_SHEETS_PRIVATE_KEY` : Clé privée (format PEM)
-- `RHUMA_GOOGLE_SHEETS_CLIENT_EMAIL` : Email du compte de service
-- `RHUMA_GOOGLE_SHEETS_CLIENT_ID` : ID du client
-- `RHUMA_GOOGLE_SHEETS_AUTH_URI` : URI d'authentification
-- `RHUMA_GOOGLE_SHEETS_TOKEN_URI` : URI du token
-- `RHUMA_GOOGLE_SHEETS_AUTH_PROVIDER_X509_CERT_URL` : URL du certificat
-- `RHUMA_GOOGLE_SHEETS_CLIENT_X509_CERT_URL` : URL du certificat client
-
-#### Structure des Variables
-
-Les variables d'environnement suivent la convention suivante :
-- Préfixe `RHUMA_` pour identifier les variables du projet
-- Sous-préfixe pour identifier la catégorie (ex: `GOOGLE_SHEETS_`)
-- Noms en majuscules avec underscores
-- Chaque attribut sur une ligne séparée
-
-### Configuration Locale
-
-Pour configurer l'application localement, créez un fichier `.env` à partir du fichier `.env.example` :
-
-```bash
-cp .env.example .env
-```
-
-Puis remplacez les valeurs par défaut par vos propres configurations.
 
 ## 📚 Documentation
 
 - [Guide Utilisateur](docs/user_guide.md)
-- [Architecture Technique](docs/ARCHITECTURE.md)
-- [Guide de Déploiement](docs/DEPLOYMENT.md)
-- [Roadmap](docs/ROADMAP.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Déploiement](docs/DEPLOYMENT.md)
+- [Documentation Technique](docs/README_TECH.md)
 
-## 📊 Métriques de Performance
+## 📋 Configuration
 
-### Production
-- 150 000 L de rhum/an
-- 1 500 000 kWh d'électricité/an
-- 1 MWc d'autoconsommation
-- 20% de gains avec le tracking
+### Variables d'Environnement
 
-### Finances
+Le projet utilise des variables d'environnement pour la configuration. Voir la [documentation complète](docs/user_guide.md#configuration) pour la liste complète des variables et leurs descriptions.
+
+#### Configuration Générale
+
+- `RHUMA_ID` : ID technique utilisé pour les fichiers de configuration (lettres, chiffres, underscores)
+- `RHUMA_LABEL` : Nom affiché dans l'interface utilisateur
+- `RHUMA_VERSION` : Version de l'application
+- `RHUMA_LANGUAGE` : Langue de l'interface
+
+#### Configuration Google Sheets
+
+Les variables pour la configuration de Google Sheets sont préfixées par `RHUMA_GOOGLE_SHEETS_` :
+
+- `GOOGLE_SHEETS_CREDENTIALS_FILE` : Chemin vers le fichier de credentials
+
+#### Paramètres de Simulation
+
+Les paramètres de simulation sont préfixés par `RHUMA_` :
+
+- `RHUMA_SURFACE_CANNE` : Surface dédiée à la canne (m²)
+- `RHUMA_RENDEMENT_CANNE` : Rendement canne (t/ha)
+- `RHUMA_TENEUR_SUCRE` : Teneur en sucre (%)
+- `RHUMA_EFFICACITE_EXTRACTION` : Efficacité extraction (%)
+- `RHUMA_EFFICACITE_DISTILLATION` : Efficacité distillation (%)
+- `RHUMA_PV_SERRE` : Puissance PV (serre) (kWc)
+- `RHUMA_PV_SOL` : Puissance PV au sol (kWc)
+- `RHUMA_TARIF_S24` : Tarif S24 (€/kWh)
+- `RHUMA_TVA` : TVA (%)
+
+## 📊 Paramètres de Simulation
+
+### Surface et Rendement
+
+- Surface canne : 6000 m² (min: 0, max: 10000)
+- Rendement canne : 120 t/ha (min: 80, max: 160)
+- Teneur sucre : 15% (min: 12, max: 20)
+
+### Extraction et Distillation
+
+- Efficacité extraction : 80% (min: 60, max: 90)
+- Efficacité distillation : 85% (min: 70, max: 95)
+
+### Énergie PV
+
+- Puissance PV serre : 500 kWc
+- Puissance PV sol : 500 kWc
+- Tarif S24 : 0.13 €/kWh
+- TVA : 5%
+
+### Coûts de Construction
+
 - Coût PV fixe : 1000€/kWc
 - Coût tracking : 250€/kWc
 - Coût serre : 150€/m²
 - Coût annuel : 100€/kWc
 
-## 🛠️ Maintenance
+## 📈 Métriques Financières
 
-### Mises à jour
-- Mise à jour des dépendances
-- Mise à jour des API
-- Mise à jour des modèles
+- Prix du rhum : 30€/L
+- Durée d'amortissement : 15 ans
+- Taux d'intérêt annuel : 3%
 
-### Sauvegarde
-- Sauvegarde des données
-- Sauvegarde des configurations
-- Sauvegarde des résultats
+## 🏅 Kudos - Système de Monnaie Complémentaire
 
-## 📈 Monitoring
+Le système Kudos est une monnaie complémentaire qui permet aux usagers de s'échanger de l'énergie sous forme de dons plutôt que de ventes, de façon publique et nominative, selon la réputation attribué à chacun par tous.
 
-- Logs d'application
-- Logs d'erreurs
-- Logs d'activité
-- Métriques de performance
+Les Kudos sont attribués aux producteurs et aux consommateurs d'énergie et peuvent être utilisés pour recevoir de l'énergie d'autres producteurs, dont la distillerie solaire principalement mais aussi des usagers qui auraient par exemple des panneaux solaires chez eux.
 
-## 📝 License
+Les échanges de Kudos sont considérés comme des dons, et sont à ce titre non soumis à la TVA. Ceci en raison de l'incertitude sur la réciprocité des échanges, contrairement à une vente.
 
-Ce projet est sous licence MIT.
+- **Attribution** : 1 Kudos = 1 kWh d'énergie produite
+- **Utilisation** : 1 Kudos = 1 kWh d'énergie reçue
+- **Plafond mensuel** : 5000 Kudos
+- **Expiration** : 12 mois
+
+Pour plus de détails, consultez le [guide Kudos](modules/kudos/kudos_README.md).

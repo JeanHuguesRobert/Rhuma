@@ -14,44 +14,60 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import numpy as np
 from dotenv import load_dotenv
+import zipfile
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
+from openpyxl.utils.dataframe import dataframe_to_rows
+import tempfile
+import shutil
+from modules.data_export import export_to_google_sheets, export_to_excel, export_to_json
+from modules.pvgis_analysis import pvgis_analysis_section
+from modules.rhuma_state import rhuma, state_manager
 
 # Charger les variables d'environnement
 load_dotenv()
 
+# Initialiser l'état RHUMA avec les valeurs par défaut
+RHUMA = state_manager.get_state()
+
+# Paramètres de base
+RHUMA_ID = RHUMA["metadata"]["id"]
+RHUMA_LABEL = RHUMA["metadata"]["label"]
+
 # Constantes de configuration
 SURFACE_CANNE_MIN = 1000  # m²
 SURFACE_CANNE_MAX = 5000  # m²
-SURFACE_CANNE_DEFAULT = int(os.getenv('RHUMA_SURFACE_CANNE', 3000))  # m²
+SURFACE_CANNE_DEFAULT = RHUMA["configuration"]["surface_canne"]  # m²
 
 RENDEMENT_CANNE_MIN = 80  # t/ha
 RENDEMENT_CANNE_MAX = 160  # t/ha
-RENDEMENT_CANNE_DEFAULT = int(os.getenv('RHUMA_RENDEMENT_CANNE', 120))  # t/ha
+RENDEMENT_CANNE_DEFAULT = RHUMA["configuration"]["rendement_canne"]  # t/ha
 
 TENEUR_SUCRE_MIN = 10  # %
 TENEUR_SUCRE_MAX = 20  # %
-TENEUR_SUCRE_DEFAULT = int(os.getenv('RHUMA_TENEUR_SUCRE', 15))  # %
+TENEUR_SUCRE_DEFAULT = RHUMA["configuration"]["teneur_sucre"]  # %
 
 EFFICACITE_EXTRACTION_MIN = 60  # %
 EFFICACITE_EXTRACTION_MAX = 95  # %
-EFFICACITE_EXTRACTION_DEFAULT = int(os.getenv('RHUMA_EFFICACITE_EXTRACTION', 80))  # %
+EFFICACITE_EXTRACTION_DEFAULT = RHUMA["configuration"]["efficacite_extraction"]  # %
 
 EFFICACITE_DISTILLATION_MIN = 60  # %
 EFFICACITE_DISTILLATION_MAX = 95  # %
-EFFICACITE_DISTILLATION_DEFAULT = int(os.getenv('RHUMA_EFFICACITE_DISTILLATION', 85))  # %
+EFFICACITE_DISTILLATION_DEFAULT = RHUMA["configuration"]["efficacite_distillation"]  # %
 
 PV_SERRE_MAX = 500  # kWc
-PV_SERRE_DEFAULT = int(os.getenv('RHUMA_PV_SERRE', 300))  # kWc
+PV_SERRE_DEFAULT = RHUMA["configuration"]["pv_serre"]  # kWc
 
 PV_SOL_MAX = 500  # kWc
-PV_SOL_DEFAULT = int(os.getenv('RHUMA_PV_SOL', 200))  # kWc
+PV_SOL_DEFAULT = RHUMA["configuration"]["pv_sol"]  # kWc
 
 TARIF_S24_MIN = 0.05  # €/kWh
 TARIF_S24_MAX = 0.20  # €/kWh
-TARIF_S24_DEFAULT = float(os.getenv('RHUMA_TARIF_S24', 0.12))  # €/kWh
+TARIF_S24_DEFAULT = RHUMA["configuration"]["tarif_s24"]  # €/kWh
 
 TVA_MIN = 0  # %
 TVA_MAX = 20  # %
-TVA_DEFAULT = int(os.getenv('RHUMA_TVA', 5))  # %
+TVA_DEFAULT = RHUMA["configuration"]["tva"]  # %
 
 LIMITE_PUISSANCE_S24 = 500  # kWc
 HEURES_PLEIN_SOLEIL = 1600  # heures/an
@@ -427,7 +443,7 @@ def calcul_tarif_production(production_kwh):
 
 # Configuration de la page
 st.set_page_config(page_title="Simulateur Rhuma, rhum solaire en Corse", layout="wide")
-st.title("🍹🌞 Rhuma, rhum sous serre autonome, Corte, Corse")
+st.title(f"{RHUMA_LABEL}")
 
 # Lecture et affichage des documents Markdown
 DOCS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs")
@@ -442,6 +458,14 @@ def read_markdown_file(markdown_file):
 
 st.markdown("""
 ## 📚 Documentation
+
+- [Guide Utilisateur](docs/user_guide.md)
+- [Architecture Technique](docs/ARCHITECTURE.md)
+- [Guide de Déploiement](docs/DEPLOYMENT.md)
+- [Roadmap](docs/ROADMAP.md) - Vision stratégique du projet et objectifs à long terme
+- [TODO](docs/TODO.md) - Liste des tâches opérationnelles et en cours
+
+[GitHub Repository](https://github.com/JeanHuguesRobert/Rhuma)
 """)
 
 # Créer des onglets pour la documentation
@@ -671,103 +695,15 @@ def financial_simulation_section():
         
         st.write("### Recommandations")
         st.write("""
-        1. Le système tracking est toujours plus rentable que le système fixe
-        2. Le scénario mixte (autoconsommation + revente) offre généralement le meilleur retour sur investissement
-        3. La durée d'amortissement doit être adaptée aux besoins de financement
-        4. Les coûts d'exploitation (maintenance, assurance) doivent être soigneusement budgétisés
+        - Le système tracking est toujours plus rentable que le système fixe
+        - Le scénario mixte (autoconsommation + revente) offre généralement le meilleur retour sur investissement
+        - La durée d'amortissement doit être adaptée aux besoins de financement
+        - Les coûts d'exploitation (maintenance, assurance) doivent être soigneusement budgétisés
         """)
-    
-    # Export JSON
-    with st.expander("💾 Export des Résultats"):
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if st.button("Exporter en JSON"):
-                # Préparer les données pour l'export
-                export_data = {
-                    'metadata': {
-                        'timestamp': datetime.now().isoformat(),
-                        'version': '1.0'
-                    },
-                    'parameters': {
-                        'production_fixe': total_pv_production,
-                        'production_tracking': production_tracking,
-                        'tarifs': {
-                            's24': tarif_s24,
-                            'heures_creuses': tarif_heures_creuses
-                        },
-                        'couts': {
-                            'fixe': cout_fixe,
-                            'tracking': cout_tracking,
-                            'construction_serre': cout_construction,
-                            'maintenance': cout_maintenance,
-                            'assurance': cout_assurance,
-                            'production': cout_production
-                        }
-                    },
-                    'scenarios': scenarios
-                }
-                
-                result = export_to_json(export_data)
-                st.write(result)
-        
-        with col2:
-            if st.button("Exporter vers Google Sheets"):
-                result = export_to_google_sheets(export_data)
-                st.write(result)
-
-def export_to_json(data, filename="simulation_results.json"):
-    """
-    Exporte les résultats de la simulation au format JSON
-    """
-    try:
-        with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
-        return f"Les résultats ont été exportés avec succès dans {filename}"
-    except Exception as e:
-        return f"Erreur lors de l'export : {str(e)}"
-
-def get_google_sheet_client():
-    """
-    Configure et retourne le client Google Sheets
-    """
-    try:
-        scope = [
-            'https://spreadsheets.google.com/feeds',
-            'https://www.googleapis.com/auth/drive'
-        ]
-        
-        # Construire le dictionnaire des credentials depuis les variables d'environnement
-        credentials_dict = {
-            "type": os.getenv('RHUMA_GOOGLE_SHEETS_TYPE'),
-            "project_id": os.getenv('RHUMA_GOOGLE_SHEETS_PROJECT_ID'),
-            "private_key_id": os.getenv('RHUMA_GOOGLE_SHEETS_PRIVATE_KEY_ID'),
-            "private_key": os.getenv('RHUMA_GOOGLE_SHEETS_PRIVATE_KEY').replace('\\n', '\n'),
-            "client_email": os.getenv('RHUMA_GOOGLE_SHEETS_CLIENT_EMAIL'),
-            "client_id": os.getenv('RHUMA_GOOGLE_SHEETS_CLIENT_ID'),
-            "auth_uri": os.getenv('RHUMA_GOOGLE_SHEETS_AUTH_URI'),
-            "token_uri": os.getenv('RHUMA_GOOGLE_SHEETS_TOKEN_URI'),
-            "auth_provider_x509_cert_url": os.getenv('RHUMA_GOOGLE_SHEETS_AUTH_PROVIDER_X509_CERT_URL'),
-            "client_x509_cert_url": os.getenv('RHUMA_GOOGLE_SHEETS_CLIENT_X509_CERT_URL')
-        }
-        
-        # Vérifier que toutes les variables sont définies
-        if not all(credentials_dict.values()):
-            raise ValueError("Une ou plusieurs variables d'environnement Google Sheets ne sont pas définies")
-            
-        credentials = ServiceAccountCredentials.from_json_keyfile_dict(
-            credentials_dict,
-            scope
-        )
-        
-        return gspread.authorize(credentials)
-    except Exception as e:
-        st.error(f"Erreur lors de la configuration de Google Sheets: {str(e)}")
-        return None
 
 def export_to_google_sheets(data, sheet_name="Simulation Rhuma"):
     """
-    Exporte les données vers une nouvelle feuille Google Sheets
+    Exporte les données vers une nouvelle feuille Google Sheets avec une structure optimisée
     """
     try:
         # Initialiser le client
@@ -785,60 +721,251 @@ def export_to_google_sheets(data, sheet_name="Simulation Rhuma"):
             role='writer'
         )
         
-        # Sélectionner la première feuille
-        worksheet = spreadsheet.get_worksheet(0)
+        # Créer les différentes feuilles
+        config_sheet = spreadsheet.add_worksheet(title="Configuration", rows="200", cols="20")
+        results_sheet = spreadsheet.add_worksheet(title="Résultats", rows="200", cols="20")
+        calculations_sheet = spreadsheet.add_worksheet(title="Calculs", rows="200", cols="20")
+        simulation_sheet = spreadsheet.add_worksheet(title="Simulation", rows="200", cols="20")
         
-        # Préparer les données pour l'export
-        headers = [
-            'Paramètre', 'Valeur', 'Unité',
-            'Scénario', 'Système', 'Production (MWh)',
-            'Autoconsommation (MWh)', 'Revente (MWh)',
-            'Revenu annuel (k€)', 'Bénéfice annuel (k€)',
-            'ROI (%)', 'Temps retour (ans)'
+        # 1. Configuration générale
+        config_general = {
+            "ID du Projet": RHUMA_ID,
+            "Label du Projet": RHUMA_LABEL,
+            "Version": os.getenv('RHUMA_VERSION', "1.0.0"),
+            "Timestamp": datetime.now().isoformat()
+        }
+        
+        # 2. Paramètres de Simulation
+        config_simulation = {
+            "Surface canne": rhuma('surface_canne'),
+            "Rendement canne": rhuma('rendement_canne'),
+            "Teneur sucre": rhuma('teneur_sucre'),
+            "Efficacité extraction": rhuma('efficacite_extraction'),
+            "Efficacité distillation": rhuma('efficacite_distillation'),
+            "Puissance PV (serre)": rhuma('pv_serre'),
+            "Puissance PV (au sol)": rhuma('pv_sol'),
+            "Tarif S24": rhuma('tarif_s24'),
+            "TVA": rhuma('tva'),
+            "Coût système PV fixe": rhuma('cout_fixe'),
+            "Coût système tracking": rhuma('cout_tracking'),
+            "Coût construction serre": rhuma('cout_construction'),
+            "Coût maintenance": rhuma('cout_maintenance'),
+            "Coût assurance": rhuma('cout_assurance'),
+            "Coût production": rhuma('cout_production'),
+            "Tarif heures creuses": rhuma('tarif_heures_creuses'),
+            "Autoconsommation fixe": rhuma('autoconsommation_fixe'),
+            "Autoconsommation tracking": rhuma('autoconsommation_tracking'),
+            "Prix du rhum": rhuma('prix_rhum'),
+            "Pertes PV": rhuma('pertes_pv'),
+            "Pertes tracking": rhuma('pertes_tracking'),
+            "Précision tracking": rhuma('precision_tracking'),
+            "Taux d'intérêt": rhuma('taux_interet'),
+            "Durée d'amortissement": rhuma('duree_amortissement')
+        }
+        
+        # 3. Résultats de la simulation
+        results = data
+        
+        # 4. Calculs intermédiaires
+        calculations = {
+            "Production PV (serre)": f"=Configuration!B8",
+            "Production PV (au sol)": f"=Configuration!B9",
+            "Production totale": "=Calculs!B1 + Calculs!B2",
+            "Autoconsommation totale": "=Configuration!B10 + Configuration!B11",
+            "Revente totale": "=Calculs!B3 - Calculs!B4",
+            "Revenu PV": "=Calculs!B5 * Configuration!B12",
+            "Revenu Rhum": "=Calculs!B6 * Configuration!B13",
+            "Bénéfice net": "=Calculs!B7 - Configuration!B14 - Configuration!B15 - Configuration!B16"
+        }
+        
+        # Créer les données pour chaque feuille
+        config_data = [
+            ["Configuration Générale"] + [""] * (len(config_general) - 1),
+            *[[k, v] for k, v in config_general.items()],
+            ["\nParamètres de Simulation"] + [""] * (len(config_simulation) - 1),
+            *[[k, v] for k, v in config_simulation.items()]
         ]
         
-        # Ajouter les en-têtes
-        worksheet.append_row(headers)
-        
-        # Ajouter les paramètres
-        params = [
-            ['Surface canne', f"{surface_canne} m²", ''],
-            ['Rendement canne', f"{rendement_canne} t/ha", ''],
-            ['Teneur en sucre', f"{teneur_sucre}%"],
-            ['Puissance PV', f"{puissance_pv} kWc", ''],
-            ['Tarif S24', f"{tarif_s24} €/kWh", ''],
-            ['Tarif Heures Creuses', f"{tarif_heures_creuses} €/kWh", ''],
-            ['Coût fixe', f"{cout_fixe} €", ''],
-            ['Coût tracking', f"{cout_tracking} €", ''],
-            ['Coût construction serre', f"{cout_construction} €/m²", ''],
-            ['Coût maintenance', f"{cout_maintenance} €/an", ''],
-            ['Coût assurance', f"{cout_assurance} €/an", ''],
-            ['Coût production', f"{cout_production} €/an", '']
+        results_data = [
+            ["Résultats de la Simulation"] + [""] * (len(results) - 1),
+            *[[k, v] for k, v in results.items()]
         ]
         
-        for param in params:
-            worksheet.append_row(param + [''] * (len(headers) - 3))
+        calculations_data = [
+            ["Calculs Intermédiaires"] + [""] * (len(calculations) - 1),
+            *[[k, v] for k, v in calculations.items()]
+        ]
         
-        # Ajouter les résultats des scénarios
-        for scenario in data['scenarios']:
-            for system in ['fixe', 'tracking']:
-                row = [
-                    '', '', '',
-                    scenario['nom'],
-                    system,
-                    f"{data['parameters'][f'production_{system}']/1000:.2f}",
-                    f"{scenario[system]['autoconsommation']/1000:.2f}",
-                    f"{scenario[system]['revente']/1000:.2f}",
-                    f"{scenario[system]['revenu']/1000:.2f}",
-                    f"{scenario[system]['benefice_annuel']/1000:.2f}",
-                    f"{scenario[system]['roi']:.1f}",
-                    f"{scenario[system]['temps_retour']:.1f}"
-                ]
-                worksheet.append_row(row)
+        # Ajouter les formules pour la simulation
+        simulation_formulas = [
+            ["Paramètre", "Formule", "Description"],
+            ["Surface canne", "=Configuration!B2", "Surface totale dédiée à la canne"],
+            ["Rendement canne", "=Configuration!B3", "Rendement annuel de la canne"],
+            ["Production PV", "=Calculs!B3", "Puissance PV installée"],
+            ["Revenu total", "=Calculs!B7", "Revenu total annuel"],
+            ["Bénéfice net", "=Calculs!B8", "Bénéfice net après déduction des coûts"],
+            ["ROI", "=Calculs!B8 / Configuration!B14", "Retour sur investissement"],
+            ["Temps retour", "=Configuration!B17 / Calculs!B8", "Durée d'amortissement"]
+        ]
         
-        return f"Les résultats ont été exportés avec succès dans {spreadsheet.url}"
+        # Écrire les données dans les feuilles
+        config_sheet.update('A1', config_data)
+        results_sheet.update('A1', results_data)
+        calculations_sheet.update('A1', calculations_data)
+        simulation_sheet.update('A1', simulation_formulas)
+        
+        # Ajouter des notes explicatives
+        config_sheet.insert_note('A1', 'Configuration du projet - Ne pas modifier')
+        results_sheet.insert_note('A1', 'Résultats de la simulation - Ne pas modifier')
+        calculations_sheet.insert_note('A1', 'Calculs intermédiaires - Ne pas modifier')
+        simulation_sheet.insert_note('A1', 'Feuille de simulation - Modifiez les valeurs ici')
+        
+        # Ajouter des formats conditionnels pour les calculs
+        calculations_sheet.format('A1:B100', {
+            'backgroundColor': {'red': 0.9, 'green': 0.9, 'blue': 0.9},
+            'textFormat': {'bold': True}
+        })
+        
+        st.success("Données exportées avec succès vers Google Sheets")
+        st.info(f"Ouvrir le fichier : {spreadsheet.url}")
+        st.info("""
+        Structure des feuilles :
+        - "Configuration" : Paramètres de base (ne pas modifier)
+        - "Résultats" : Résultats de la simulation (ne pas modifier)
+        - "Calculs" : Calculs intermédiaires (ne pas modifier)
+        - "Simulation" : Feuille de travail (à modifier pour faire vos propres simulations)
+        
+        Pour faire une nouvelle simulation :
+        1. Copiez la feuille "Simulation"
+        2. Modifiez les valeurs dans la nouvelle feuille
+        3. Les formules se mettront à jour automatiquement
+        4. Les résultats seront mis à jour en temps réel
+        """)
+        
+        return spreadsheet.url
+        
     except Exception as e:
-        return f"Erreur lors de l'export Google Sheets : {str(e)}"
+        st.error(f"Erreur lors de l'export vers Google Sheets: {str(e)}")
+        return None
+
+def export_to_excel(data, filename="simulation_rhum.xlsx"):
+    """
+    Exporte les données au format Excel (.xlsx) avec une structure claire et formatée
+    
+    Args:
+        data (dict): Données à exporter
+        filename (str): Nom du fichier Excel
+        
+    Returns:
+        dict: Données exportées
+    """
+    try:
+        # Créer un nouveau workbook Excel
+        wb = Workbook()
+        
+        # 1. Feuille de Configuration
+        config_ws = wb.active
+        config_ws.title = "Configuration"
+        
+        # Style pour les titres
+        title_font = Font(bold=True, size=14)
+        header_fill = PatternFill(start_color="D9D9D9", end_color="D9D9D9", fill_type="solid")
+        
+        # Ajouter les métadonnées
+        config_ws.append(["Configuration Générale"])
+        config_ws['A1'].font = title_font
+        config_ws.append(["ID du Projet", RHUMA_ID])
+        config_ws.append(["Label du Projet", RHUMA_LABEL])
+        config_ws.append(["Version", os.getenv('RHUMA_VERSION', "1.0.0")])
+        config_ws.append(["Timestamp", datetime.now().isoformat()])
+        
+        # Espacement
+        config_ws.append([])
+        
+        # Ajouter les paramètres de simulation
+        config_ws.append(["Paramètres de Simulation"])
+        config_ws['A7'].font = title_font
+        
+        # Ajouter les paramètres avec style
+        for idx, (key, value) in enumerate(RHUMA["configuration"].items(), start=8):
+            cell = config_ws.cell(row=idx, column=1, value=key)
+            cell.fill = header_fill
+            cell.alignment = Alignment(horizontal="right")
+            config_ws.cell(row=idx, column=2, value=value)
+        
+        # 2. Feuille de Résultats
+        results_ws = wb.create_sheet("Résultats")
+        
+        # Préparer les données de résultats
+        results_data = {
+            "Production PV (serre)": data.get("production_pv", 0),
+            "Production PV (au sol)": data.get("production_au_sol", 0),
+            "Production totale": data.get("production_pv", 0) + data.get("production_au_sol", 0),
+            "Autoconsommation": data.get("autoconsommation", 0),
+            "Revente": data.get("revente", 0),
+            "Revenu PV": data.get("revenu_pv", 0),
+            "Revenu Rhum": data.get("revenu_rhum", 0),
+            "Revenu total": data.get("revenu_pv", 0) + data.get("revenu_rhum", 0),
+            "Coût PV": data.get("cout_pv", 0),
+            "Coût serre": data.get("cout_serre", 0),
+            "Coût total": data.get("cout_total", 0),
+            "Bénéfice net": data.get("benefice_net", 0),
+            "ROI": data.get("roi", 0),
+            "Temps retour": data.get("temps_retour", 0)
+        }
+        
+        # Ajouter les données
+        results_ws.append(["Résultats de la Simulation"])
+        results_ws['A1'].font = title_font
+        
+        for row in results_data.items():
+            results_ws.append(row)
+            results_ws.cell(row=results_ws.max_row, column=1).fill = header_fill
+            results_ws.cell(row=results_ws.max_row, column=1).alignment = Alignment(horizontal="right")
+        
+        # 3. Feuille de Production Mensuelle
+        monthly_ws = wb.create_sheet("Production Mensuelle")
+        
+        # Préparer les données de production mensuelle
+        monthly_data = list(data.get("monthly_production", {}).items())
+        monthly_ws.append(["Mois", "Production (kWh)"])
+        
+        for month, production in monthly_data:
+            monthly_ws.append([month, production])
+        
+        # 4. Feuille de Scénarios
+        scenarios_ws = wb.create_sheet("Scénarios")
+        
+        # Préparer les données de scénarios
+        scenarios_data = data.get("scenarios", [])
+        if scenarios_data:
+            scenarios_ws.append(["Scénario", "Description", "Valeur"])
+            for scenario in scenarios_data:
+                scenarios_ws.append([
+                    scenario.get("nom", ""),
+                    scenario.get("description", ""),
+                    scenario.get("valeur", "")
+                ])
+        
+        # Sauvegarder le fichier Excel
+        wb.save(filename)
+        
+        # Télécharger le fichier
+        with open(filename, 'rb') as f:
+            st.download_button(
+                label="Télécharger l'export Excel",
+                data=f,
+                file_name=filename,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+        
+        st.success("Données exportées avec succès au format Excel")
+        
+        return data
+        
+    except Exception as e:
+        st.error(f"Erreur lors de l'export Excel: {str(e)}")
+        return None
 
 # Sidebar - Paramètres du projet
 st.sidebar.header("Paramètres d'Entrée")
@@ -895,9 +1022,9 @@ cout_assurance = st.sidebar.number_input(
 cout_production = st.sidebar.number_input(
     "Coût production annuel (€/kWc)",
     min_value=0,
-    value=int(os.getenv('RHUMA_COUT_PRODUCTION', 30)),  # Prix moyen de production en 2024
-    step=5,
-    help="Coût annuel de production par kWc"
+    value=float(os.getenv('RHUMA_COUT_PRODUCTION', 30.0)),
+    step=1.0,
+    help="Coût annuel de production de la canne à sucre et distillation"
 )
 
 # Calcul des coûts totaux
@@ -928,7 +1055,7 @@ cost_col1, cost_col2 = st.sidebar.columns(2)
 
 with cost_col1:
     # Tarifs et revenus
-    st.subheader("📈 Tarifs et Revenus")
+    st.write("### Tarifs et Revenus")
     
     # Tarifs EDF
     st.write("### Tarifs EDF")
@@ -1009,7 +1136,7 @@ with tech_col2:
         max_value=100.0,
         value=int(os.getenv('RHUMA_PERTES_TRACKING', 5.0)),
         step=1.0,
-        help="Pertes dues au système de tracking"
+        help="Pertes liées à l'absence de trackers solaires"
     )
     
     precision_tracking = st.number_input(
@@ -1063,72 +1190,104 @@ with econ_col2:
     )
 
 # 1. Surface et Rendement
-surface_canne = st.sidebar.number_input("Surface dédiée à la canne (m²)", 
+if 'surface_canne' not in st.session_state:
+    st.session_state.surface_canne = SURFACE_CANNE_DEFAULT
+if 'rendement_canne' not in st.session_state:
+    st.session_state.rendement_canne = RENDEMENT_CANNE_DEFAULT
+if 'teneur_sucre' not in st.session_state:
+    st.session_state.teneur_sucre = TENEUR_SUCRE_DEFAULT
+
+surface_canne = st.sidebar.number_input(state_manager.get_i18n('surface_canne'), 
                                       SURFACE_CANNE_MIN, SURFACE_CANNE_MAX, 
-                                      SURFACE_CANNE_DEFAULT)
-rendement_canne = st.sidebar.slider("Rendement canne (t/ha)", 
+                                      st.session_state.surface_canne, 
+                                      key='surface_canne')
+
+rendement_canne = st.sidebar.slider(state_manager.get_i18n('rendement_canne'), 
                                   RENDEMENT_CANNE_MIN, RENDEMENT_CANNE_MAX, 
-                                  RENDEMENT_CANNE_DEFAULT)
-teneur_sucre = st.sidebar.slider("Teneur en sucre (%)", 
+                                  st.session_state.rendement_canne, 
+                                  key='rendement_canne')
+
+teneur_sucre = st.sidebar.slider(state_manager.get_i18n('teneur_sucre'), 
                               TENEUR_SUCRE_MIN, TENEUR_SUCRE_MAX, 
-                              TENEUR_SUCRE_DEFAULT)
+                              st.session_state.teneur_sucre, 
+                              key='teneur_sucre')
 
 # 2. Extraction et Distillation
-efficacite_extraction = st.sidebar.slider("Efficacité extraction (%)", 
+if 'efficacite_extraction' not in st.session_state:
+    st.session_state.efficacite_extraction = EFFICACITE_EXTRACTION_DEFAULT
+if 'efficacite_distillation' not in st.session_state:
+    st.session_state.efficacite_distillation = EFFICACITE_DISTILLATION_DEFAULT
+
+efficacite_extraction = st.sidebar.slider(state_manager.get_i18n('efficacite_extraction'), 
                                       EFFICACITE_EXTRACTION_MIN, 
                                       EFFICACITE_EXTRACTION_MAX, 
-                                      EFFICACITE_EXTRACTION_DEFAULT)
-efficacite_distillation = st.sidebar.slider("Efficacité distillation (%)", 
+                                      st.session_state.efficacite_extraction, 
+                                      key='efficacite_extraction')
+
+efficacite_distillation = st.sidebar.slider(state_manager.get_i18n('efficacite_distillation'), 
                                         EFFICACITE_DISTILLATION_MIN, 
                                         EFFICACITE_DISTILLATION_MAX, 
-                                        EFFICACITE_DISTILLATION_DEFAULT)
+                                        st.session_state.efficacite_distillation, 
+                                        key='efficacite_distillation')
 
 # 3. Énergie PV
-puissance_pv = st.sidebar.number_input("Puissance PV (serre) (kWc)", 
+if 'pv_serre' not in st.session_state:
+    st.session_state.pv_serre = PV_SERRE_DEFAULT
+if 'pv_sol' not in st.session_state:
+    st.session_state.pv_sol = PV_SOL_DEFAULT
+
+puissance_pv = st.sidebar.number_input(state_manager.get_i18n('pv_serre'), 
                                     100, PV_SERRE_MAX, 
-                                    PV_SERRE_DEFAULT,
+                                    st.session_state.pv_serre, 
+                                    key='pv_serre',
                                     help=f"Limite légale : {LIMITE_PUISSANCE_S24} kWc pour bénéficier du tarif S24")
-tarif_s24 = st.sidebar.number_input("Tarif S24 (€/kWh)", 
+tarif_s24 = st.sidebar.number_input(state_manager.get_i18n('tarif_s24'), 
                                  TARIF_S24_MIN, TARIF_S24_MAX, 
-                                 TARIF_S24_DEFAULT,
-                                 help="Tarif garanti pour la vente d'électricité")
-tarif_tva = st.sidebar.number_input("TVA (%)", 
+                                 st.session_state.tarif_s24, 
+                                 key='tarif_s24',
+                                 help="Tarif de rachat S24 pour la Corse")
+tarif_tva = st.sidebar.number_input(state_manager.get_i18n('tva'), 
                                  TVA_MIN, TVA_MAX, 
-                                 TVA_DEFAULT)
-tarif_taxes = st.sidebar.number_input("Taxes (%)", 
-                                  0, TAXES_MAX, 
+                                 st.session_state.tva, 
+                                 key='tva')
+tarif_taxes = st.sidebar.number_input(state_manager.get_i18n('tarif_taxes'), 
+                                  0, 100, 
                                   0)
-peak_efficiency = st.sidebar.slider("Efficacité maximale des panneaux (%)", 
+peak_efficiency = st.sidebar.slider(state_manager.get_i18n('peak_efficiency'), 
                                  15, 25, 
                                  20)
 
 # 4. Énergie solaire et heures d'ensoleillement
-losses_pv = st.sidebar.slider("Pertes PV (%)", 
-                            0, PERTES_PV_MAX, 
+losses_pv = st.sidebar.slider(state_manager.get_i18n('losses_pv'), 
+                            0, 100, 
                             12, 
                             help="12% arrondi de 11.78 selon PVGIS")
-autoconsommation = st.sidebar.slider("Autoconsommation (%)", 
+autoconsommation = st.sidebar.slider(state_manager.get_i18n('autoconsommation'), 
                                   0, 100, 
                                   30, 
                                   help="Partie de l'électricité utilisée pour la production de rhum")
-pertes_tracking = st.sidebar.slider("Pertes de tracking (%)", 
-                                 0, PERTES_TRACKING_MAX, 
+pertes_tracking = st.sidebar.slider(state_manager.get_i18n('pertes_tracking'), 
+                                 0, 100, 
                                  15,
                                  help="Pertes liées à l'absence de trackers solaires")
-prix_alcool = st.sidebar.number_input("Prix de l'alcool (€/L)", 
-                                    PRIX_RHUM_MIN, PRIX_RHUM_MAX, 
-                                    PRIX_RHUM_MIN,
+prix_alcool = st.sidebar.number_input(state_manager.get_i18n('prix_alcool'), 
+                                    0.0, 100.0, 
+                                    20.0,
                                  help="L'alcool n'est qu'une partie du prix du rhum, s'ajoute d'autres coûts et taxes")
 
 # 5. Énergie PV au sol
-capacite_au_sol = st.sidebar.number_input("Capacité PV (au sol) (kWc)", 
+if 'pv_sol' not in st.session_state:
+    st.session_state.pv_sol = PV_SOL_DEFAULT
+
+capacite_au_sol = st.sidebar.number_input(state_manager.get_i18n('pv_sol'), 
                                           100, PV_SOL_MAX, 
-                                          PV_SOL_DEFAULT,
+                                          st.session_state.pv_sol, 
+                                          key='pv_sol',
                                           help="Production supplémentaire grâce aux panneaux au sol")
 
 # 6. Limites réglementaires
-st.sidebar.header("Limites Réglementaires")
-with st.sidebar.expander("🔍 Détails des Limites"):
+st.sidebar.header(state_manager.get_i18n('limites_reglementaires'))
+with st.sidebar.expander(state_manager.get_i18n('details_limites')):
     st.write("- **Tarif S24** :")
     st.write(f"  - Limite de puissance : {LIMITE_PUISSANCE_S24} kWc")
     st.write(f"  - Limite de production : {LIMITE_PRODUCTION_S24/1000:.0f} MWh/an")
@@ -1139,8 +1298,8 @@ with st.sidebar.expander("🔍 Détails des Limites"):
     st.write("  - Au-delà : tarif dégradé")
 
 # 7. Tarification clients
-st.sidebar.header("Tarification Clients")
-with st.sidebar.expander("💰 Tarification Clients"):
+st.sidebar.header(state_manager.get_i18n('tarification_clients'))
+with st.sidebar.expander(state_manager.get_i18n('tarification_clients_details')):
     st.write("- **Électricité Verte** :")
     st.write("  - Tarif : Des heures toujours creuses !")
     st.write("  - Application : 24h/24h")
@@ -1364,6 +1523,7 @@ with st.spinner("🔄 Calculs en cours..."):
     tracking_optimization_section(production_pv_ideal)
     tracking_comparison_section(production_pv_ideal)
     financial_simulation_section()
+    pvgis_analysis_section(RHUMA)
 
     # Détails techniques
     with st.expander("📊 Détails des Calculs"):
@@ -1412,15 +1572,900 @@ with st.spinner("🔄 Calculs en cours..."):
         st.write(f"- Delta CA : {delta_ca:.0f}€/an")
 
 # Export des résultats
-if st.button("💾 Exporter en CSV"):
+st.header("Exporter les Résultats")
+
+# Bouton d'export complet
+if st.button("💾 Exporter tout"):    
+    # Préparer les données pour l'export
+    data = {
+        "production_pv": production_pv,
+        "production_au_sol": production_au_sol,
+        "autoconsommation": autoconsommation,
+        "revente": revente,
+        "revenu_pv": revenu_pv,
+        "revenu_rhum": revenu_rhum,
+        "cout_pv": cout_pv,
+        "cout_serre": cout_serre,
+        "cout_total": cout_total,
+        "benefice_net": benefice_net,
+        "roi": roi,
+        "temps_retour": temps_retour,
+        "monthly_production": monthly_production,
+        "scenarios": scenarios
+    }
     
-    df_export = pd.DataFrame({
+    export_all_formats(data)
+
+# Boutons individuels pour chaque format
+st.subheader("Exporter un format spécifique")
+
+# Export CSV
+if st.button("CSV", key="export_csv"):    
+    data = {
+        "production_pv": production_pv,
+        "production_au_sol": production_au_sol,
+        "autoconsommation": autoconsommation,
+        "revente": revente,
+        "revenu_pv": revenu_pv,
+        "revenu_rhum": revenu_rhum,
+        "cout_pv": cout_pv,
+        "cout_serre": cout_serre,
+        "cout_total": cout_total,
+        "benefice_net": benefice_net,
+        "roi": roi,
+        "temps_retour": temps_retour,
+        "monthly_production": monthly_production,
+        "scenarios": scenarios
+    }
+    export_to_csv(data)
+
+# Export Excel
+if st.button("Excel", key="export_excel"):    
+    data = {
+        "production_pv": production_pv,
+        "production_au_sol": production_au_sol,
+        "autoconsommation": autoconsommation,
+        "revente": revente,
+        "revenu_pv": revenu_pv,
+        "revenu_rhum": revenu_rhum,
+        "cout_pv": cout_pv,
+        "cout_serre": cout_serre,
+        "cout_total": cout_total,
+        "benefice_net": benefice_net,
+        "roi": roi,
+        "temps_retour": temps_retour,
+        "monthly_production": monthly_production,
+        "scenarios": scenarios
+    }
+    export_to_excel(data)
+
+# Export JSON
+if st.button("JSON", key="export_json"):    
+    data = {
+        "production_pv": production_pv,
+        "production_au_sol": production_au_sol,
+        "autoconsommation": autoconsommation,
+        "revente": revente,
+        "revenu_pv": revenu_pv,
+        "revenu_rhum": revenu_rhum,
+        "cout_pv": cout_pv,
+        "cout_serre": cout_serre,
+        "cout_total": cout_total,
+        "benefice_net": benefice_net,
+        "roi": roi,
+        "temps_retour": temps_retour,
+        "monthly_production": monthly_production,
+        "scenarios": scenarios
+    }
+    export_to_json(data)
+
+# Lien vers le dépôt GitHub
+st.markdown("[GitHub Repository](https://github.com/JeanHuguesRobert/Rhuma)")
+
+# Fonction d'export de configuration
+def export_config(config_name):
+    """
+    Exporte les configurations personnalisées dans un fichier .env.config_name
+    """
+    try:
+        # Vérifier le nom de la configuration
+        if not config_name or not config_name.replace('_', '').isalnum():
+            st.error("Le nom de la configuration doit contenir uniquement des lettres, chiffres et underscores")
+            return
+
+        # Créer le contenu du fichier
+        config_content = "# Configuration personnalisée\n"
+        
+        # Ajouter les variables de configuration (exclure les credentials Google Sheets)
+        for key, value in os.environ.items():
+            if key.startswith('RHUMA_') and not key.startswith('RHUMA_GOOGLE_SHEETS_'):
+                config_content += f"{key}={value}\n"
+
+        # Écrire le fichier
+        filename = f".env.{config_name}"
+        with open(filename, 'w') as f:
+            f.write(config_content)
+
+        st.success(f"Configuration exportée avec succès dans {filename}")
+        
+        # Télécharger le fichier
+        with open(filename, 'r') as f:
+            st.download_button(
+                label="Télécharger la configuration",
+                data=f,
+                file_name=filename,
+                mime="text/plain"
+            )
+
+    except Exception as e:
+        st.error(f"Erreur lors de l'export de la configuration: {str(e)}")
+
+# Ajouter un séparateur
+st.sidebar.markdown("---")
+
+# Export de configuration
+config_name = st.sidebar.text_input("Nom de la configuration", "")
+if st.sidebar.button("Exporter la configuration"):
+    export_config(config_name)
+
+# Paramètres ID
+st.sidebar.markdown("---")
+st.sidebar.subheader("Paramètres Généraux")
+
+# ID technique
+id = st.sidebar.text_input("ID du projet", RHUMA_ID, help="ID technique utilisé pour les fichiers de configuration")
+if id != RHUMA_ID:
+    if not id.replace('_', '').isalnum():
+        st.error("L'ID doit contenir uniquement des lettres, chiffres et underscores")
+    else:
+        os.environ['RHUMA_ID'] = id
+
+# Label utilisateur
+label = st.sidebar.text_input("Label du projet", RHUMA_LABEL, help="Nom affiché dans l'interface utilisateur")
+if label != RHUMA_LABEL:
+    os.environ['RHUMA_LABEL'] = label
+
+def import_from_json(file_path):
+    """
+    Importe les données depuis un fichier JSON et gère les versions
+    
+    Args:
+        file_path (str): Chemin vers le fichier JSON
+        
+    Returns:
+        dict: Données importées et adaptées à la version courante
+        str: Message d'erreur si l'import échoue
+    """
+    try:
+        # Lire le fichier JSON
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            
+        # Vérifier la version
+        file_version = data.get('metadata', {}).get('version', '1.0.0')
+        current_version = "1.0.0"  # Version actuelle de l'application
+        
+        # Comparer les versions
+        if file_version != current_version:
+            st.warning(f"Attention : le fichier est en version {file_version} alors que l'application est en version {current_version}")
+            
+            # Adapter les données selon la version
+            if file_version == "0.1.0":
+                data = adapt_from_v0_1_0(data)
+            elif file_version == "0.2.0":
+                data = adapt_from_v0_2_0(data)
+            # Ajouter d'autres cas de conversion selon les versions
+            
+        # Vérifier l'intégrité des données
+        if not validate_data(data):
+            return None, "Les données importées ne sont pas valides"
+            
+        return data, None
+        
+    except json.JSONDecodeError:
+        return None, "Le fichier n'est pas un JSON valide"
+    except Exception as e:
+        return None, f"Erreur lors de l'import : {str(e)}"
+
+
+def adapt_from_v0_1_0(data):
+    """
+    Adapte les données de la version 0.1.0 à la version actuelle
+    """
+    # Exemple de conversion
+    if 'old_parameter' in data:
+        data['new_parameter'] = data.pop('old_parameter')
+    
+    return data
+
+
+def adapt_from_v0_2_0(data):
+    """
+    Adapte les données de la version 0.2.0 à la version actuelle
+    """
+    # Exemple de conversion
+    if 'old_structure' in data:
+        data['new_structure'] = convert_structure(data.pop('old_structure'))
+    
+    return data
+
+
+def validate_data(data):
+    """
+    Vérifie l'intégrité des données importées
+    """
+    required_fields = [
+        'metadata',
+        'configuration',
+        'calculs',
+        'scenarios',
+        'monthly_production'
+    ]
+    
+    for field in required_fields:
+        if field not in data:
+            return False
+    
+    # Vérifier la structure des données
+    if not isinstance(data['configuration'], dict):
+        return False
+    if not isinstance(data['calculs'], dict):
+        return False
+    
+    return True
+
+def export_to_json(data, filename="simulation_results.json"):
+    """
+    Exporte les résultats de la simulation au format JSON avec une structure optimisée pour les bases de données
+    
+    Args:
+        data (dict): Données à exporter
+        filename (str): Nom du fichier JSON
+        
+    Returns:
+        dict: Données exportées
+    """
+    try:
+        # Préparer les données pour l'export
+        export_data = {
+            "metadata": {
+                "id": RHUMA["metadata"]["project_id"],
+                "label": RHUMA["metadata"]["project_label"],
+                "version": RHUMA["metadata"]["version"],
+                "timestamp": RHUMA["metadata"]["timestamp"],
+                "export_timestamp": datetime.now().isoformat()
+            },
+            "configuration": {
+                "surface_canne": rhuma('surface_canne'),
+                "rendement_canne": rhuma('rendement_canne'),
+                "teneur_sucre": rhuma('teneur_sucre'),
+                "efficacite_extraction": rhuma('efficacite_extraction'),
+                "efficacite_distillation": rhuma('efficacite_distillation'),
+                "pv_serre": rhuma('pv_serre'),
+                "pv_sol": rhuma('pv_sol'),
+                "tarif_s24": rhuma('tarif_s24'),
+                "tva": rhuma('tva'),
+                "cout_fixe": rhuma('cout_fixe'),
+                "cout_tracking": rhuma('cout_tracking'),
+                "cout_construction": rhuma('cout_construction'),
+                "cout_maintenance": rhuma('cout_maintenance'),
+                "cout_assurance": rhuma('cout_assurance'),
+                "cout_production": rhuma('cout_production'),
+                "tarif_heures_creuses": rhuma('tarif_heures_creuses'),
+                "autoconsommation_fixe": rhuma('autoconsommation_fixe'),
+                "autoconsommation_tracking": rhuma('autoconsommation_tracking'),
+                "prix_rhum": rhuma('prix_rhum'),
+                "pertes_pv": rhuma('pertes_pv'),
+                "pertes_tracking": rhuma('pertes_tracking'),
+                "precision_tracking": rhuma('precision_tracking'),
+                "taux_interet": rhuma('taux_interet'),
+                "duree_amortissement": rhuma('duree_amortissement')
+            },
+            "results": {
+                "production": {
+                    "pv_serre": float(data.get("production_pv", 0)),
+                    "pv_sol": float(data.get("production_au_sol", 0)),
+                    "total": float(data.get("production_pv", 0) + data.get("production_au_sol", 0)),
+                    "autoconsommation": float(data.get("autoconsommation", 0)),
+                    "revente": float(data.get("revente", 0))
+                },
+                "revenus": {
+                    "pv": float(data.get("revenu_pv", 0)),
+                    "rhum": float(data.get("revenu_rhum", 0)),
+                    "total": float(data.get("revenu_pv", 0) + data.get("revenu_rhum", 0))
+                },
+                "costs": {
+                    "initial": {
+                        "pv": float(data.get("cout_pv", 0)),
+                        "serre": float(data.get("cout_serre", 0)),
+                        "total": float(data.get("cout_total", 0))
+                    },
+                    "annual": {
+                        "maintenance": float(data.get("couts_annuels", {}).get("maintenance", 0)),
+                        "insurance": float(data.get("couts_annuels", {}).get("assurance", 0)),
+                        "production": float(data.get("couts_annuels", {}).get("production", 0))
+                    }
+                },
+                "benefits": {
+                    "net": float(data.get("benefice_net", 0)),
+                    "roi": float(data.get("roi", 0)),
+                    "return_time": float(data.get("temps_retour", 0))
+                }
+            },
+            "monthly_production": {
+                "data": [{
+                    "month": month,
+                    "production": float(production)
+                } for month, production in data.get("monthly_production", {}).items()]
+            },
+            "scenarios": [{
+                "id": idx + 1,
+                "name": scenario.get("nom", ""),
+                "description": scenario.get("description", ""),
+                "value": float(scenario.get("valeur", 0)) if scenario.get("valeur") is not None else None
+            } for idx, scenario in enumerate(data.get("scenarios", []))]
+        }
+
+        # Écrire le fichier JSON
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(export_data, f, indent=4, ensure_ascii=False)
+        
+        # Télécharger le fichier
+        with open(filename, 'r') as f:
+            st.download_button(
+                label="Télécharger le fichier JSON",
+                data=f.read(),
+                file_name=filename,
+                mime="application/json"
+            )
+        
+        st.success(f"Données exportées avec succès dans {filename}")
+        
+        return export_data
+        
+    except Exception as e:
+        st.error(f"Erreur lors de l'export JSON: {str(e)}")
+        return None
+
+def export_all_formats(data, filename_prefix="simulation_rhum"):
+    """
+    Exporte les données dans tous les formats disponibles (JSON, CSV, Excel, .env)
+    et les regroupe dans un fichier ZIP unique
+    
+    Args:
+        data (dict): Données à exporter
+        filename_prefix (str): Préfixe pour les noms de fichiers
+        
+    Returns:
+        dict: Données exportées
+    """
+    try:
+        # Créer un dossier temporaire pour stocker les fichiers
+        temp_dir = tempfile.mkdtemp()
+        
+        # 1. Export JSON
+        json_filename = os.path.join(temp_dir, f"{filename_prefix}.json")
+        with open(json_filename, 'w', encoding='utf-8') as f:
+            json.dump(export_to_json(data), f, indent=4, ensure_ascii=False)
+        
+        # 2. Export Excel
+        excel_filename = os.path.join(temp_dir, f"{filename_prefix}.xlsx")
+        export_to_excel(data, excel_filename)
+        
+        # 3. Export CSV (dans un dossier séparé)
+        csv_dir = os.path.join(temp_dir, "csv")
+        os.makedirs(csv_dir, exist_ok=True)
+        
+        # Configuration
+        config_df = pd.DataFrame([
+            ["ID du Projet", RHUMA["metadata"]["project_id"]],
+            ["Label du Projet", RHUMA["metadata"]["project_label"]],
+            ["Version", RHUMA["metadata"]["version"]],
+            ["Timestamp", RHUMA["metadata"]["timestamp"]]
+        ])
+        config_df.to_csv(os.path.join(csv_dir, f"{filename_prefix}_configuration.csv"), index=False, encoding='utf-8')
+        
+        # Paramètres
+        params_df = pd.DataFrame([
+            ["Surface canne (m²)", RHUMA["configuration"]["surface_canne"]],
+            ["Rendement canne (t/ha)", RHUMA["configuration"]["rendement_canne"]],
+            ["Teneur sucre (%)", RHUMA["configuration"]["teneur_sucre"]],
+            ["Efficacité extraction (%)", RHUMA["configuration"]["efficacite_extraction"]],
+            ["Efficacité distillation (%)", RHUMA["configuration"]["efficacite_distillation"]],
+            ["Puissance PV (serre) (kWc)", RHUMA["configuration"]["pv_serre"]],
+            ["Puissance PV (au sol) (kWc)", RHUMA["configuration"]["pv_sol"]],
+            ["Tarif S24 (€/kWh)", RHUMA["configuration"]["tarif_s24"]],
+            ["TVA (%)", RHUMA["configuration"]["tva"]],
+            ["Coût système PV fixe (€/kWc)", RHUMA["configuration"]["cout_fixe"]],
+            ["Coût système tracking (€/kWc)", RHUMA["configuration"]["cout_tracking"]],
+            ["Coût construction serre (€/m²)", RHUMA["configuration"]["cout_construction"]],
+            ["Coût maintenance (€/kWc)", RHUMA["configuration"]["cout_maintenance"]],
+            ["Coût assurance (€/kWc)", RHUMA["configuration"]["cout_assurance"]],
+            ["Coût production (€/kWc)", RHUMA["configuration"]["cout_production"]],
+            ["Tarif heures creuses (€/kWh)", RHUMA["configuration"]["tarif_heures_creuses"]],
+            ["Autoconsommation fixe (kWh)", RHUMA["configuration"]["autoconsommation_fixe"]],
+            ["Autoconsommation tracking (kWh)", RHUMA["configuration"]["autoconsommation_tracking"]],
+            ["Prix du rhum (€/L)", RHUMA["configuration"]["prix_rhum"]],
+            ["Pertes PV (%)", RHUMA["configuration"]["pertes_pv"]],
+            ["Pertes tracking (%)", RHUMA["configuration"]["pertes_tracking"]],
+            ["Précision tracking (°)", RHUMA["configuration"]["precision_tracking"]],
+            ["Taux d'intérêt (%)", RHUMA["configuration"]["taux_interet"]],
+            ["Durée d'amortissement (ans)", RHUMA["configuration"]["duree_amortissement"]]
+        ])
+        params_df.to_csv(os.path.join(csv_dir, f"{filename_prefix}_parameters.csv"), index=False, encoding='utf-8')
+        
+        # Résultats
+        results_df = pd.DataFrame([
+            ["Production PV (serre)", data.get("production_pv", 0)],
+            ["Production PV (au sol)", data.get("production_au_sol", 0)],
+            ["Production totale", data.get("production_pv", 0) + data.get("production_au_sol", 0)],
+            ["Autoconsommation", data.get("autoconsommation", 0)],
+            ["Revente", data.get("revente", 0)],
+            ["Revenu PV", data.get("revenu_pv", 0)],
+            ["Revenu Rhum", data.get("revenu_rhum", 0)],
+            ["Revenu total", data.get("revenu_pv", 0) + data.get("revenu_rhum", 0)],
+            ["Coût PV", data.get("cout_pv", 0)],
+            ["Coût serre", data.get("cout_serre", 0)],
+            ["Coût total", data.get("cout_total", 0)],
+            ["Bénéfice net", data.get("benefice_net", 0)],
+            ["ROI", data.get("roi", 0)],
+            ["Temps retour", data.get("temps_retour", 0)]
+        ])
+        results_df.to_csv(os.path.join(csv_dir, f"{filename_prefix}_results.csv"), index=False, encoding='utf-8')
+        
+        # Production mensuelle
+        monthly_df = pd.DataFrame(list(data.get("monthly_production", {}).items()),
+                                columns=["Mois", "Production (kWh)"])
+        monthly_df.to_csv(os.path.join(csv_dir, f"{filename_prefix}_monthly_production.csv"), index=False, encoding='utf-8')
+        
+        # 4. Export .env (sans les secrets)
+        env_filename = os.path.join(temp_dir, f"{filename_prefix}.env")
+        with open(env_filename, 'w', encoding='utf-8') as f:
+            f.write(f"RHUMA_ID={RHUMA['metadata']['project_id']}\n")
+            f.write(f"RHUMA_LABEL={RHUMA['metadata']['project_label']}\n")
+            f.write(f"RHUMA_VERSION={RHUMA['metadata']['version']}\n")
+            for key, value in RHUMA["configuration"].items():
+                if isinstance(value, (int, float)):
+                    f.write(f"RHUMA_{key.upper()}={value}\n")
+        
+        # Créer le fichier ZIP
+        zip_filename = f"{filename_prefix}_export.zip"
+        with zipfile.ZipFile(zip_filename, 'w') as zipf:
+            # Ajouter tous les fichiers
+            zipf.write(json_filename, os.path.basename(json_filename))
+            zipf.write(excel_filename, os.path.basename(excel_filename))
+            zipf.write(env_filename, os.path.basename(env_filename))
+            
+            # Ajouter les fichiers CSV
+            for csv_file in os.listdir(csv_dir):
+                zipf.write(os.path.join(csv_dir, csv_file), f"csv/{csv_file}")
+        
+        # Nettoyer les fichiers temporaires
+        shutil.rmtree(temp_dir)
+        
+        # Télécharger le fichier ZIP
+        with open(zip_filename, 'rb') as f:
+            st.download_button(
+                label="Télécharger l'export complet",
+                data=f,
+                file_name=zip_filename,
+                mime="application/zip"
+            )
+        
+        st.success("Données exportées avec succès dans tous les formats")
+        
+        return data
+        
+    except Exception as e:
+        st.error(f"Erreur lors de l'export complet: {str(e)}")
+        return None
+
+# Export des résultats
+if st.button("💾 Exporter en CSV"):
+    data = {
         "Mois": list(monthly_production.keys()) + ["Total annuel"],
         "Production serre (MWh)": [x/1000 for x in list(monthly_pv_production.values())] + [production_pv/1000],
         "Production collective (MWh)": [x/1000 for x in list(monthly_au_sol_production.values())] + [production_au_sol/1000],
         "CA collectif (€)": [chiffre_affaires_collectif] * 12 + [chiffre_affaires_collectif]
-    })
+    }
+    df_export = pd.DataFrame(data)
     st.download_button("⬇️ Télécharger", df_export.to_csv(index=False), "production_rhum_solaire.csv", "text/csv")
+
+def export_to_csv(data, filename_prefix="simulation_rhum"):
+    """
+    Exporte les données au format CSV avec une structure claire
+    
+    Args:
+        data (dict): Données à exporter
+        filename_prefix (str): Préfixe du nom du fichier
+        
+    Returns:
+        dict: Données exportées
+    """
+    try:
+        # Préparer les données pour l'export
+        export_data = {
+            "metadata": RHUMA["metadata"],
+            "configuration": RHUMA["configuration"],
+            "calculs": {
+                "production": {
+                    "pv_serre": data.get("production_pv", 0),
+                    "pv_sol": data.get("production_au_sol", 0),
+                    "total": data.get("production_pv", 0) + data.get("production_au_sol", 0),
+                    "autoconsommation": data.get("autoconsommation", 0),
+                    "revente": data.get("revente", 0)
+                },
+                "revenus": {
+                    "pv": data.get("revenu_pv", 0),
+                    "rhum": data.get("revenu_rhum", 0),
+                    "total": data.get("revenu_pv", 0) + data.get("revenu_rhum", 0)
+                },
+                "couts": {
+                    "initiaux": {
+                        "pv": data.get("cout_pv", 0),
+                        "serre": data.get("cout_serre", 0),
+                        "total": data.get("cout_total", 0)
+                    },
+                    "annuels": {
+                        "maintenance": data.get("couts_annuels", {}).get("maintenance", 0),
+                        "assurance": data.get("couts_annuels", {}).get("assurance", 0),
+                        "production": data.get("couts_annuels", {}).get("production", 0)
+                    }
+                },
+                "benefices": {
+                    "net": data.get("benefice_net", 0),
+                    "roi": data.get("roi", 0),
+                    "temps_retour": data.get("temps_retour", 0)
+                }
+            },
+            "scenarios": data.get("scenarios", []),
+            "monthly_production": data.get("monthly_production", {})
+        }
+        
+        # Créer les fichiers CSV pour chaque feuille
+        filenames = {}
+        
+        # 1. Configuration
+        config_df = pd.DataFrame([
+            ["ID du Projet", RHUMA["metadata"]["project_id"]],
+            ["Label du Projet", RHUMA["metadata"]["project_label"]],
+            ["Version", RHUMA["metadata"]["version"]],
+            ["Timestamp", RHUMA["metadata"]["timestamp"]]
+        ])
+        config_df.to_csv(f"{filename_prefix}_configuration.csv", index=False, encoding='utf-8')
+        filenames["configuration"] = f"{filename_prefix}_configuration.csv"
+        
+        # 2. Paramètres de Simulation
+        params_df = pd.DataFrame([
+            ["Surface canne (m²)", RHUMA["configuration"]["surface_canne"]],
+            ["Rendement canne (t/ha)", RHUMA["configuration"]["rendement_canne"]],
+            ["Teneur sucre (%)", RHUMA["configuration"]["teneur_sucre"]],
+            ["Efficacité extraction (%)", RHUMA["configuration"]["efficacite_extraction"]],
+            ["Efficacité distillation (%)", RHUMA["configuration"]["efficacite_distillation"]],
+            ["Puissance PV (serre) (kWc)", RHUMA["configuration"]["pv_serre"]],
+            ["Puissance PV (au sol) (kWc)", RHUMA["configuration"]["pv_sol"]],
+            ["Tarif S24 (€/kWh)", RHUMA["configuration"]["tarif_s24"]],
+            ["TVA (%)", RHUMA["configuration"]["tva"]],
+            ["Coût système PV fixe (€/kWc)", RHUMA["configuration"]["cout_fixe"]],
+            ["Coût système tracking (€/kWc)", RHUMA["configuration"]["cout_tracking"]],
+            ["Coût construction serre (€/m²)", RHUMA["configuration"]["cout_construction"]],
+            ["Coût maintenance (€/kWc)", RHUMA["configuration"]["cout_maintenance"]],
+            ["Coût assurance (€/kWc)", RHUMA["configuration"]["cout_assurance"]],
+            ["Coût production (€/kWc)", RHUMA["configuration"]["cout_production"]],
+            ["Tarif heures creuses (€/kWh)", RHUMA["configuration"]["tarif_heures_creuses"]],
+            ["Autoconsommation fixe (kWh)", RHUMA["configuration"]["autoconsommation_fixe"]],
+            ["Autoconsommation tracking (kWh)", RHUMA["configuration"]["autoconsommation_tracking"]],
+            ["Prix du rhum (€/L)", RHUMA["configuration"]["prix_rhum"]],
+            ["Pertes PV (%)", RHUMA["configuration"]["pertes_pv"]],
+            ["Pertes tracking (%)", RHUMA["configuration"]["pertes_tracking"]],
+            ["Précision tracking (°)", RHUMA["configuration"]["precision_tracking"]],
+            ["Taux d'intérêt (%)", RHUMA["configuration"]["taux_interet"]],
+            ["Durée d'amortissement (ans)", RHUMA["configuration"]["duree_amortissement"]]
+        ])
+        params_df.to_csv(f"{filename_prefix}_parameters.csv", index=False, encoding='utf-8')
+        filenames["parameters"] = f"{filename_prefix}_parameters.csv"
+        
+        # 3. Résultats
+        results_df = pd.DataFrame([
+            ["Production PV (serre)", data.get("production_pv", 0)],
+            ["Production PV (au sol)", data.get("production_au_sol", 0)],
+            ["Production totale", data.get("production_pv", 0) + data.get("production_au_sol", 0)],
+            ["Autoconsommation", data.get("autoconsommation", 0)],
+            ["Revente", data.get("revente", 0)],
+            ["Revenu PV", data.get("revenu_pv", 0)],
+            ["Revenu Rhum", data.get("revenu_rhum", 0)],
+            ["Revenu total", data.get("revenu_pv", 0) + data.get("revenu_rhum", 0)],
+            ["Coût PV", data.get("cout_pv", 0)],
+            ["Coût serre", data.get("cout_serre", 0)],
+            ["Coût total", data.get("cout_total", 0)],
+            ["Bénéfice net", data.get("benefice_net", 0)],
+            ["ROI", data.get("roi", 0)],
+            ["Temps retour", data.get("temps_retour", 0)]
+        ])
+        results_df.to_csv(f"{filename_prefix}_results.csv", index=False, encoding='utf-8')
+        filenames["results"] = f"{filename_prefix}_results.csv"
+        
+        # 4. Production mensuelle
+        monthly_df = pd.DataFrame(list(data.get("monthly_production", {}).items()),
+                                columns=["Mois", "Production (kWh)"])
+        monthly_df.to_csv(f"{filename_prefix}_monthly_production.csv", index=False, encoding='utf-8')
+        filenames["monthly_production"] = f"{filename_prefix}_monthly_production.csv"
+        
+        # Créer un fichier ZIP avec tous les fichiers CSV
+        zip_filename = f"{filename_prefix}_export.zip"
+        with zipfile.ZipFile(zip_filename, 'w') as zipf:
+            # Ajouter tous les fichiers
+            zipf.write(f"{filename_prefix}_configuration.csv", os.path.basename(f"{filename_prefix}_configuration.csv"))
+            zipf.write(f"{filename_prefix}_parameters.csv", os.path.basename(f"{filename_prefix}_parameters.csv"))
+            zipf.write(f"{filename_prefix}_results.csv", os.path.basename(f"{filename_prefix}_results.csv"))
+            zipf.write(f"{filename_prefix}_monthly_production.csv", os.path.basename(f"{filename_prefix}_monthly_production.csv"))
+            os.remove(f"{filename_prefix}_configuration.csv")
+            os.remove(f"{filename_prefix}_parameters.csv")
+            os.remove(f"{filename_prefix}_results.csv")
+            os.remove(f"{filename_prefix}_monthly_production.csv")
+        
+        # Télécharger le fichier ZIP
+        with open(zip_filename, 'rb') as f:
+            st.download_button(
+                label="Télécharger l'export CSV",
+                data=f,
+                file_name=zip_filename,
+                mime="application/zip"
+            )
+        
+        st.success("Données exportées avec succès au format CSV")
+        
+        return export_data
+        
+    except Exception as e:
+        st.error(f"Erreur lors de l'export CSV: {str(e)}")
+        return None
+
+def export_to_json(data, filename="simulation_results.json"):
+    """
+    Exporte les résultats de la simulation au format JSON avec une structure optimisée pour les bases de données
+    
+    Args:
+        data (dict): Données à exporter
+        filename (str): Nom du fichier JSON
+        
+    Returns:
+        dict: Données exportées
+    """
+    try:
+        # Préparer les données pour l'export
+        export_data = {
+            "metadata": {
+                "id": RHUMA["metadata"]["project_id"],
+                "label": RHUMA["metadata"]["project_label"],
+                "version": RHUMA["metadata"]["version"],
+                "timestamp": RHUMA["metadata"]["timestamp"],
+                "export_timestamp": datetime.now().isoformat()
+            },
+            "configuration": {
+                "surface_canne": rhuma('surface_canne'),
+                "rendement_canne": rhuma('rendement_canne'),
+                "teneur_sucre": rhuma('teneur_sucre'),
+                "efficacite_extraction": rhuma('efficacite_extraction'),
+                "efficacite_distillation": rhuma('efficacite_distillation'),
+                "pv_serre": rhuma('pv_serre'),
+                "pv_sol": rhuma('pv_sol'),
+                "tarif_s24": rhuma('tarif_s24'),
+                "tva": rhuma('tva'),
+                "cout_fixe": rhuma('cout_fixe'),
+                "cout_tracking": rhuma('cout_tracking'),
+                "cout_construction": rhuma('cout_construction'),
+                "cout_maintenance": rhuma('cout_maintenance'),
+                "cout_assurance": rhuma('cout_assurance'),
+                "cout_production": rhuma('cout_production'),
+                "tarif_heures_creuses": rhuma('tarif_heures_creuses'),
+                "autoconsommation_fixe": rhuma('autoconsommation_fixe'),
+                "autoconsommation_tracking": rhuma('autoconsommation_tracking'),
+                "prix_rhum": rhuma('prix_rhum'),
+                "pertes_pv": rhuma('pertes_pv'),
+                "pertes_tracking": rhuma('pertes_tracking'),
+                "precision_tracking": rhuma('precision_tracking'),
+                "taux_interet": rhuma('taux_interet'),
+                "duree_amortissement": rhuma('duree_amortissement')
+            },
+            "results": {
+                "production": {
+                    "pv_serre": float(data.get("production_pv", 0)),
+                    "pv_sol": float(data.get("production_au_sol", 0)),
+                    "total": float(data.get("production_pv", 0) + data.get("production_au_sol", 0)),
+                    "autoconsommation": float(data.get("autoconsommation", 0)),
+                    "revente": float(data.get("revente", 0))
+                },
+                "revenus": {
+                    "pv": float(data.get("revenu_pv", 0)),
+                    "rhum": float(data.get("revenu_rhum", 0)),
+                    "total": float(data.get("revenu_pv", 0) + data.get("revenu_rhum", 0))
+                },
+                "costs": {
+                    "initial": {
+                        "pv": float(data.get("cout_pv", 0)),
+                        "serre": float(data.get("cout_serre", 0)),
+                        "total": float(data.get("cout_total", 0))
+                    },
+                    "annual": {
+                        "maintenance": float(data.get("couts_annuels", {}).get("maintenance", 0)),
+                        "insurance": float(data.get("couts_annuels", {}).get("assurance", 0)),
+                        "production": float(data.get("couts_annuels", {}).get("production", 0))
+                    }
+                },
+                "benefits": {
+                    "net": float(data.get("benefice_net", 0)),
+                    "roi": float(data.get("roi", 0)),
+                    "return_time": float(data.get("temps_retour", 0))
+                }
+            },
+            "monthly_production": {
+                "data": [{
+                    "month": month,
+                    "production": float(production)
+                } for month, production in data.get("monthly_production", {}).items()]
+            },
+            "scenarios": [{
+                "id": idx + 1,
+                "name": scenario.get("nom", ""),
+                "description": scenario.get("description", ""),
+                "value": float(scenario.get("valeur", 0)) if scenario.get("valeur") is not None else None
+            } for idx, scenario in enumerate(data.get("scenarios", []))]
+        }
+
+        # Écrire le fichier JSON
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(export_data, f, indent=4, ensure_ascii=False)
+        
+        # Télécharger le fichier
+        with open(filename, 'r') as f:
+            st.download_button(
+                label="Télécharger le fichier JSON",
+                data=f.read(),
+                file_name=filename,
+                mime="application/json"
+            )
+        
+        st.success(f"Données exportées avec succès dans {filename}")
+        
+        return export_data
+        
+    except Exception as e:
+        st.error(f"Erreur lors de l'export JSON: {str(e)}")
+        return None
+
+def export_all_formats(data, filename_prefix="simulation_rhum"):
+    """
+    Exporte les données dans tous les formats disponibles (JSON, CSV, Excel, .env)
+    et les regroupe dans un fichier ZIP unique
+    
+    Args:
+        data (dict): Données à exporter
+        filename_prefix (str): Préfixe pour les noms de fichiers
+        
+    Returns:
+        dict: Données exportées
+    """
+    try:
+        # Créer un dossier temporaire pour stocker les fichiers
+        temp_dir = tempfile.mkdtemp()
+        
+        # 1. Export JSON
+        json_filename = os.path.join(temp_dir, f"{filename_prefix}.json")
+        with open(json_filename, 'w', encoding='utf-8') as f:
+            json.dump(export_to_json(data), f, indent=4, ensure_ascii=False)
+        
+        # 2. Export Excel
+        excel_filename = os.path.join(temp_dir, f"{filename_prefix}.xlsx")
+        export_to_excel(data, excel_filename)
+        
+        # 3. Export CSV (dans un dossier séparé)
+        csv_dir = os.path.join(temp_dir, "csv")
+        os.makedirs(csv_dir, exist_ok=True)
+        
+        # Configuration
+        config_df = pd.DataFrame([
+            ["ID du Projet", RHUMA["metadata"]["project_id"]],
+            ["Label du Projet", RHUMA["metadata"]["project_label"]],
+            ["Version", RHUMA["metadata"]["version"]],
+            ["Timestamp", RHUMA["metadata"]["timestamp"]]
+        ])
+        config_df.to_csv(os.path.join(csv_dir, f"{filename_prefix}_configuration.csv"), index=False, encoding='utf-8')
+        
+        # Paramètres
+        params_df = pd.DataFrame([
+            ["Surface canne (m²)", RHUMA["configuration"]["surface_canne"]],
+            ["Rendement canne (t/ha)", RHUMA["configuration"]["rendement_canne"]],
+            ["Teneur sucre (%)", RHUMA["configuration"]["teneur_sucre"]],
+            ["Efficacité extraction (%)", RHUMA["configuration"]["efficacite_extraction"]],
+            ["Efficacité distillation (%)", RHUMA["configuration"]["efficacite_distillation"]],
+            ["Puissance PV (serre) (kWc)", RHUMA["configuration"]["pv_serre"]],
+            ["Puissance PV (au sol) (kWc)", RHUMA["configuration"]["pv_sol"]],
+            ["Tarif S24 (€/kWh)", RHUMA["configuration"]["tarif_s24"]],
+            ["TVA (%)", RHUMA["configuration"]["tva"]],
+            ["Coût système PV fixe (€/kWc)", RHUMA["configuration"]["cout_fixe"]],
+            ["Coût système tracking (€/kWc)", RHUMA["configuration"]["cout_tracking"]],
+            ["Coût construction serre (€/m²)", RHUMA["configuration"]["cout_construction"]],
+            ["Coût maintenance (€/kWc)", RHUMA["configuration"]["cout_maintenance"]],
+            ["Coût assurance (€/kWc)", RHUMA["configuration"]["cout_assurance"]],
+            ["Coût production (€/kWc)", RHUMA["configuration"]["cout_production"]],
+            ["Tarif heures creuses (€/kWh)", RHUMA["configuration"]["tarif_heures_creuses"]],
+            ["Autoconsommation fixe (kWh)", RHUMA["configuration"]["autoconsommation_fixe"]],
+            ["Autoconsommation tracking (kWh)", RHUMA["configuration"]["autoconsommation_tracking"]],
+            ["Prix du rhum (€/L)", RHUMA["configuration"]["prix_rhum"]],
+            ["Pertes PV (%)", RHUMA["configuration"]["pertes_pv"]],
+            ["Pertes tracking (%)", RHUMA["configuration"]["pertes_tracking"]],
+            ["Précision tracking (°)", RHUMA["configuration"]["precision_tracking"]],
+            ["Taux d'intérêt (%)", RHUMA["configuration"]["taux_interet"]],
+            ["Durée d'amortissement (ans)", RHUMA["configuration"]["duree_amortissement"]]
+        ])
+        params_df.to_csv(os.path.join(csv_dir, f"{filename_prefix}_parameters.csv"), index=False, encoding='utf-8')
+        
+        # Résultats
+        results_df = pd.DataFrame([
+            ["Production PV (serre)", data.get("production_pv", 0)],
+            ["Production PV (au sol)", data.get("production_au_sol", 0)],
+            ["Production totale", data.get("production_pv", 0) + data.get("production_au_sol", 0)],
+            ["Autoconsommation", data.get("autoconsommation", 0)],
+            ["Revente", data.get("revente", 0)],
+            ["Revenu PV", data.get("revenu_pv", 0)],
+            ["Revenu Rhum", data.get("revenu_rhum", 0)],
+            ["Revenu total", data.get("revenu_pv", 0) + data.get("revenu_rhum", 0)],
+            ["Coût PV", data.get("cout_pv", 0)],
+            ["Coût serre", data.get("cout_serre", 0)],
+            ["Coût total", data.get("cout_total", 0)],
+            ["Bénéfice net", data.get("benefice_net", 0)],
+            ["ROI", data.get("roi", 0)],
+            ["Temps retour", data.get("temps_retour", 0)]
+        ])
+        results_df.to_csv(os.path.join(csv_dir, f"{filename_prefix}_results.csv"), index=False, encoding='utf-8')
+        
+        # Production mensuelle
+        monthly_df = pd.DataFrame(list(data.get("monthly_production", {}).items()),
+                                columns=["Mois", "Production (kWh)"])
+        monthly_df.to_csv(os.path.join(csv_dir, f"{filename_prefix}_monthly_production.csv"), index=False, encoding='utf-8')
+        
+        # 4. Export .env (sans les secrets)
+        env_filename = os.path.join(temp_dir, f"{filename_prefix}.env")
+        with open(env_filename, 'w', encoding='utf-8') as f:
+            f.write(f"RHUMA_ID={RHUMA['metadata']['project_id']}\n")
+            f.write(f"RHUMA_LABEL={RHUMA['metadata']['project_label']}\n")
+            f.write(f"RHUMA_VERSION={RHUMA['metadata']['version']}\n")
+            for key, value in RHUMA["configuration"].items():
+                if isinstance(value, (int, float)):
+                    f.write(f"RHUMA_{key.upper()}={value}\n")
+        
+        # Créer le fichier ZIP
+        zip_filename = f"{filename_prefix}_export.zip"
+        with zipfile.ZipFile(zip_filename, 'w') as zipf:
+            # Ajouter tous les fichiers
+            zipf.write(json_filename, os.path.basename(json_filename))
+            zipf.write(excel_filename, os.path.basename(excel_filename))
+            zipf.write(env_filename, os.path.basename(env_filename))
+            
+            # Ajouter les fichiers CSV
+            for csv_file in os.listdir(csv_dir):
+                zipf.write(os.path.join(csv_dir, csv_file), f"csv/{csv_file}")
+        
+        # Nettoyer les fichiers temporaires
+        shutil.rmtree(temp_dir)
+        
+        # Télécharger le fichier ZIP
+        with open(zip_filename, 'rb') as f:
+            st.download_button(
+                label="Télécharger l'export complet",
+                data=f,
+                file_name=zip_filename,
+                mime="application/zip"
+            )
+        
+        st.success("Données exportées avec succès dans tous les formats")
+        
+        return data
+        
+    except Exception as e:
+        st.error(f"Erreur lors de l'export complet: {str(e)}")
+        return None
 
 # Lien vers le dépôt GitHub
 st.markdown("[GitHub Repository](https://github.com/JeanHuguesRobert/Rhuma)")

@@ -1,4 +1,4 @@
-# 📅 Roadmap du Projet Rhum Solaire de Corte
+# 📅 Roadmap du Projet Rhuma
 
 ## 🚀 Phase 1 - Validation Technique (100k€)
 
@@ -133,6 +133,14 @@
 - [Documentation Technique](docs/technical.md)
 - [Guide d'Utilisation](docs/user_guide.md)
 - [Site officiel](https://github.com/JeanHuguesRobert/Rhuma)
+
+## 📝 Planification et Suivi
+
+Cette roadmap fournit une vision stratégique à long terme du projet Rhum Solaire de Corte. Pour suivre les tâches opérationnelles et le développement quotidien, consultez le [TODO.md](../docs/TODO.md) qui détaille les actions immédiates et en cours.
+
+La roadmap et le TODO.md sont complémentaires :
+- La roadmap définit les objectifs stratégiques et les grandes phases du projet
+- Le TODO.md détaille les tâches opérationnelles et les prochaines étapes de développement
 
 ## 📧 Contact
 

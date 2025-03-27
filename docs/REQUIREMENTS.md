@@ -1,4 +1,4 @@
-# 📋 Spécifications du Projet Rhum Solaire de Corte
+# 📋 Spécifications du Projet Rhum Solaire de Corte, Rhuma
 
 ## 🎯 Objectif du Projet
 Optimiser la production de rhum dans une serre solaire, avec une première implémentation à Corte, en Corse, en utilisant un simulateur Python et une interface Streamlit.
@@ -87,13 +87,7 @@ Optimiser la production de rhum dans une serre solaire, avec une première impl�
 
 ```
 rhuma/
-├── src/
-│   ├── data/         # Données et configurations
-│   ├── models/       # Modèles de simulation
-│   │   ├── energy/    # Modèles énergie
-│   │   ├── production/ # Modèles production
-│   │   └── financial/  # Modèles financiers
-│   └── utils/        # Utilitaires
+├── modules/          # Modules
 ├── docs/             # Documentation
 └── tests/            # Tests
 ```
