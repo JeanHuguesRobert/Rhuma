@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from pvgis import PVGIS  # Import du module PVGIS
+from modules.pvgis.pvgis import PVGIS  # Import du module PVGIS local
 from modules.rhuma_state import rhuma
 
 def pvgis_analysis_section(rhuma_state):
