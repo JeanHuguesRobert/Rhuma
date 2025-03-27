@@ -8,8 +8,8 @@ Ce guide vous aidera à comprendre et utiliser le simulateur de production de rh
 
 ### 1. Surface et Rendement
 
-- **Surface canne** : De 0 à 10 000 m² (défaut : 3000 m²)
-- **Rendement canne** : De 80 à 160 t/ha (défaut : 120 t/ha)
+- **Surface canne** : De 0 à 10 000 m² (défaut : 6000 m²)
+- **Rendement canne** : De 80 à 160 t/ha (défaut : 100 t/ha)
 - **Teneur en sucre** : De 12% à 20% (défaut : 15%)
 
 ### 2. Extraction et Distillation
@@ -19,10 +19,10 @@ Ce guide vous aidera à comprendre et utiliser le simulateur de production de rh
 
 ### 3. Énergie PV
 
-- **Puissance PV (serre)** : De 0 à 1000 kWc (défaut : 300 kWc)
-- **Puissance PV (sol)** : De 0 à 1000 kWc (défaut : 200 kWc)
-- **Tarif S24** : De 0.05€ à 0.20€/kWh (défaut : 0.12€/kWh)
-- **TVA** : De 0% à 20% (défaut : 5%)
+- **Puissance PV (serre)** : De 0 à 1000 kWc (défaut : 500 kWc)
+- **Puissance PV (sol)** : De 0 à 1000 kWc (défaut : 500 kWc)
+- **Tarif S24** : De 0.05€ à 0.20€/kWh (défaut : 0.13€/kWh)
+- **TVA** : De 0% à 20% (défaut : 20%)
 
 ### 4. Coûts de Construction
 
@@ -31,7 +31,7 @@ Ce guide vous aidera à comprendre et utiliser le simulateur de production de rh
   - Système tracking (supplémentaire) : 250€/kWc
 - **Coûts de construction de la serre**
   - Prix moyen : 150€/m²
-  - Plage de variation : 100 à 200€/m²
+  - Plage de variation : 100 à 250€/m²
 - **Coûts annuels**
   - Maintenance : 50€/kWc/an
   - Assurance : 20€/kWc/an
@@ -52,7 +52,7 @@ Le projet utilise des variables d'environnement pour la configuration. Les princ
 
 #### Configuration Google Sheets
 
-- `GOOGLE_SHEETS_CREDENTIALS_FILE` : Chemin vers le fichier de credentials
+- `GOOGLE_SHEETS_CREDENTIALS_xxx` : décrit ailleurs (ToDo: préciser où)
 
 #### Paramètres de Simulation
 
