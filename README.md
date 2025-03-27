@@ -4,6 +4,10 @@
 
 Rhuma est un simulateur de production de rhum sous serre solaire en Corse. L'application permet de simuler et optimiser la production de rhum en tenant compte des aspects énergétiques, agricoles et financiers.
 
+## 🌐 Accès à l'Application
+
+L'application est accessible en ligne sur [Streamlit Cloud](https://acorsica.streamlit.app/)
+
 ## 🚀 Fonctionnalités
 
 - Simulation de la production PV avec tracking

@@ -139,7 +139,7 @@ Puis remplacez les valeurs par défaut par vos propres configurations.
 
 L'architecture de Rhuma est conçue pour optimiser la production de rhum dans une serre solaire, avec une première implémentation à Corte, en Corse.
 
-## 🏗️ Structure du Projet
+## 🛠️ Structure du Projet
 
 ```
 rhuma/
@@ -150,6 +150,103 @@ rhuma/
 │   └── state_manager.py  # Gestionnaire d'état
 ├── docs/             # Documentation
 └── tests/            # Tests
+```
+
+## 🛠️ Configuration Technique
+
+### 1. Environnement
+
+```bash
+# Créer un environnement virtuel
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+.\venv\Scripts\activate  # Windows
+
+# Installer les dépendances
+pip install streamlit pandas matplotlib numpy gspread oauth2client
+```
+
+### 2. Variables d'Environnement
+
+```bash
+# .env
+RHUMA_ID=rhuma
+RHUMA_LABEL="Rhum Solaire de Corse"
+RHUMA_VERSION="1.0.0"
+RHUMA_LANGUAGE=fr
+
+# API Keys
+PVGIS_API_KEY=v3.1
+
+# Google Sheets
+GOOGLE_SHEETS_CREDENTIALS_FILE=credentials.json
+```
+
+### 3. Structure des Données
+
+```json
+{
+  "metadata": {
+    "id": "rhuma",
+    "label": "Rhum Solaire de Corse",
+    "version": "1.0.0",
+    "timestamp": "2025-03-27T08:45:20+01:00",
+    "language": "fr"
+  },
+  "configuration": {
+    "surface_canne": 3000,
+    "rendement_canne": 120,
+    "teneur_sucre": 15,
+    "efficacite_extraction": 80,
+    "efficacite_distillation": 85,
+    "pv_serre": 300,
+    "pv_sol": 200,
+    "tarif_s24": 0.12,
+    "tva": 5
+  }
+}
+```
+
+## 🚀 Déploiement
+
+### 1. Développement Local
+
+```bash
+# Lancer l'application
+streamlit run streamlit_app.py
+```
+
+### 2. Déploiement Cloud
+
+#### Heroku
+
+```bash
+# Créer une application Heroku
+heroku create rhuma-app
+
+# Configurer les variables d'environnement
+heroku config:set RHUMA_ID=rhuma
+heroku config:set RHUMA_LABEL="Rhum Solaire de Corse"
+
+# Déployer l'application
+git push heroku main
+```
+
+#### Docker (Optionnel)
+
+```bash
+# 1. Cloner le dépôt
+gh repo clone JeanHuguesRobert/Rhuma
+
+cd Rhuma
+
+# 2. Créer un nouveau dépôt
+gh repo create votre-nom-de-projet --public
+
+# 3. Configurer le nouveau dépôt
+git remote rename origin upstream
+git remote add origin https://github.com/votre-username/votre-nom-de-projet.git
+git push -u origin main
 ```
 
 ## 🛠️ Technologie
