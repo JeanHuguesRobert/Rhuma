@@ -193,14 +193,39 @@ rhuma/
 
 ## Configuration
 
-### 1. Variables d'Environnement
-- Clés API
-- Paramètres de connexion
-- Configuration Google Sheets
-- Paramètres système
+### Variables d'Environnement
 
-### 2. Configuration Locale
-- Paramètres par défaut
-- Chemins de fichiers
-- Configuration des API
-- Paramètres de simulation
+Le projet utilise des variables d'environnement pour la configuration. Les principales variables sont :
+
+#### Google Sheets
+
+Les variables pour la configuration de Google Sheets sont préfixées par `RHUMA_GOOGLE_SHEETS_` :
+
+- `RHUMA_GOOGLE_SHEETS_TYPE` : Type de compte de service ("service_account")
+- `RHUMA_GOOGLE_SHEETS_PROJECT_ID` : ID du projet Google Cloud
+- `RHUMA_GOOGLE_SHEETS_PRIVATE_KEY_ID` : ID de la clé privée
+- `RHUMA_GOOGLE_SHEETS_PRIVATE_KEY` : Clé privée (format PEM)
+- `RHUMA_GOOGLE_SHEETS_CLIENT_EMAIL` : Email du compte de service
+- `RHUMA_GOOGLE_SHEETS_CLIENT_ID` : ID du client
+- `RHUMA_GOOGLE_SHEETS_AUTH_URI` : URI d'authentification
+- `RHUMA_GOOGLE_SHEETS_TOKEN_URI` : URI du token
+- `RHUMA_GOOGLE_SHEETS_AUTH_PROVIDER_X509_CERT_URL` : URL du certificat
+- `RHUMA_GOOGLE_SHEETS_CLIENT_X509_CERT_URL` : URL du certificat client
+
+#### Structure des Variables
+
+Les variables d'environnement suivent la convention suivante :
+- Préfixe `RHUMA_` pour identifier les variables du projet
+- Sous-préfixe pour identifier la catégorie (ex: `GOOGLE_SHEETS_`)
+- Noms en majuscules avec underscores
+- Chaque attribut sur une ligne séparée
+
+### Configuration Locale
+
+Pour configurer l'application localement, créez un fichier `.env` à partir du fichier `.env.example` :
+
+```bash
+cp .env.example .env
+```
+
+Puis remplacez les valeurs par défaut par vos propres configurations.

@@ -725,14 +725,24 @@ def get_google_sheet_client():
             'https://www.googleapis.com/auth/drive'
         ]
         
-        # Récupérer les credentials depuis la variable d'environnement
-        credentials_json = os.getenv('GOOGLE_SHEETS_CREDENTIALS')
+        # Construire le dictionnaire des credentials depuis les variables d'environnement
+        credentials_dict = {
+            "type": os.getenv('RHUMA_GOOGLE_SHEETS_TYPE'),
+            "project_id": os.getenv('RHUMA_GOOGLE_SHEETS_PROJECT_ID'),
+            "private_key_id": os.getenv('RHUMA_GOOGLE_SHEETS_PRIVATE_KEY_ID'),
+            "private_key": os.getenv('RHUMA_GOOGLE_SHEETS_PRIVATE_KEY').replace('\\n', '\n'),
+            "client_email": os.getenv('RHUMA_GOOGLE_SHEETS_CLIENT_EMAIL'),
+            "client_id": os.getenv('RHUMA_GOOGLE_SHEETS_CLIENT_ID'),
+            "auth_uri": os.getenv('RHUMA_GOOGLE_SHEETS_AUTH_URI'),
+            "token_uri": os.getenv('RHUMA_GOOGLE_SHEETS_TOKEN_URI'),
+            "auth_provider_x509_cert_url": os.getenv('RHUMA_GOOGLE_SHEETS_AUTH_PROVIDER_X509_CERT_URL'),
+            "client_x509_cert_url": os.getenv('RHUMA_GOOGLE_SHEETS_CLIENT_X509_CERT_URL')
+        }
         
-        if not credentials_json:
-            raise ValueError("Les credentials Google Sheets ne sont pas définis dans les variables d'environnement")
+        # Vérifier que toutes les variables sont définies
+        if not all(credentials_dict.values()):
+            raise ValueError("Une ou plusieurs variables d'environnement Google Sheets ne sont pas définies")
             
-        # Charger les credentials depuis la chaîne JSON
-        credentials_dict = json.loads(credentials_json)
         credentials = ServiceAccountCredentials.from_json_keyfile_dict(
             credentials_dict,
             scope
@@ -758,7 +768,7 @@ def export_to_google_sheets(data, sheet_name="Simulation Rhuma"):
         
         # Partager le spreadsheet avec l'utilisateur
         spreadsheet.share(
-            'jean.hugues.robert@gmail.com',  # Adresse email à modifier
+            os.getenv('RHUMA_GOOGLE_SHEETS_CLIENT_EMAIL'),  # Utiliser l'email du service account
             perm_type='user',
             role='writer'
         )
