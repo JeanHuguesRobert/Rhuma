@@ -1,4 +1,4 @@
-const { spawn } = require('child_process');
+import { spawn } from 'child_process';
 
 // Start Streamlit application
 const streamlit = spawn('streamlit', ['run', 'streamlit_app.py']);

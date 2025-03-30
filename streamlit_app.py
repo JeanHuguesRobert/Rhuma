@@ -22,10 +22,13 @@ import tempfile
 import shutil
 from modules.data_export import export_to_google_sheets, export_to_excel, export_to_json
 from modules.pvgis_analysis import pvgis_analysis_section
-from modules.rhuma_state import rhuma, state_manager
+from modules.state_manager import StateManager
 
 # Charger les variables d'environnement
 load_dotenv()
+
+# Initialiser le gestionnaire d'état
+state_manager = StateManager()
 
 # Initialiser l'état RHUMA avec les valeurs par défaut
 RHUMA = state_manager.get_state()

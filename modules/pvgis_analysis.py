@@ -3,16 +3,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import subprocess
 import json
-from modules.rhuma_state import rhuma
+from modules.state_manager import StateManager
 
-def pvgis_analysis_section(rhuma_state):
+def pvgis_analysis_section():
     """
     Section d'analyse PVGIS dans l'interface Streamlit
-    
-    Args:
-        rhuma_state (dict): État global du projet RHUMA
     """
     st.header("🌞 Analyse PVGIS")
+    
+    # Initialiser le gestionnaire d'état
+    state_manager = StateManager()
     
     # Paramètres de configuration
     with st.expander("🔧 Configuration du Système PV"):
@@ -29,7 +29,7 @@ def pvgis_analysis_section(rhuma_state):
             # Configuration du système PV
             st.subheader("⚡ Configuration PV")
             capacity = st.number_input("Capacité installée (kWc)", 
-                                     value=rhuma('pv_serre') + rhuma('pv_sol'), 
+                                     value=state_manager.get_attribute('pv_serre') + state_manager.get_attribute('pv_sol'), 
                                      min_value=0.0)
             tilt = st.slider("Angle de pose (°)", 0, 90, 30)
             orientation = st.slider("Orientation (°)", -180, 180, -180)
@@ -46,7 +46,7 @@ def pvgis_analysis_section(rhuma_state):
     # Bouton d'analyse
     if st.button("🔍 Analyser"):
         with st.spinner("Analyse en cours..."):
-            # Préparer les paramètres avec l'état RHUMA
+            # Préparer les paramètres
             params = {
                 'latitude': latitude,
                 'longitude': longitude,
@@ -55,7 +55,7 @@ def pvgis_analysis_section(rhuma_state):
                 'aspect': orientation,
                 'isTracking': tracking,
                 'losses': 14,  # Perte standard de 14%
-                'rhuma_state': rhuma_state
+                'rhuma_state': state_manager.get_state()
             }
             
             # Appeler pvgis.js avec les paramètres
