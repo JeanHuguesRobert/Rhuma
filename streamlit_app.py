@@ -20,9 +20,11 @@ from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils.dataframe import dataframe_to_rows
 import tempfile
 import shutil
-from modules.data_export import export_to_google_sheets, export_to_excel, export_to_json
+from modules.data_export import export_to_google_sheets, export_to_excel, export_to_json, get_google_sheet_client
 from modules.pvgis_analysis import pvgis_analysis_section
+from modules.state_manager import rhuma
 from modules.state_manager import StateManager
+from modules.solar_tracker_3d import solar_tracker_3d_section
 
 # Charger les variables d'environnement
 load_dotenv()
@@ -81,7 +83,7 @@ class TrackingSystemSimulation:
     def __init__(self, standard_panel_efficiency=0.22):
         self.base_efficiency = standard_panel_efficiency
         
-    def calculate_tracking_gains(self, tracking_precision=0.2, panel_orientation_precision=2):
+    def calculate_tracking_gains(self, tracking_precision=0.2, panel_orientation_precision=2.0):
         """
         Calcule les gains de production dus au tracking
         
@@ -299,7 +301,7 @@ def tracking_optimization_section(production_pv_ideal):
     
     # Création du graphique des pertes
     fig2, ax2 = plt.subplots()
-    ax2.bar(losses.keys(), losses.values(), color="#FFC107")
+    ax2.bar(list(losses.keys()), list(losses.values()), color="#FFC107")
     ax2.axhline(0, color="black", linewidth=0.5)
     ax2.set_ylabel("Pourcentage de perte (%)")
     ax2.set_title("Répartition des pertes")
@@ -434,15 +436,7 @@ def tracking_comparison_section(production_pv_ideal):
         - Prendre en compte la maintenance du système de tracking
         """)
 
-def calcul_tarif_production(production_kwh):
-    """
-    Calcule le revenu en tenant compte du seuil des 1600h à pleine puissance
-    """
-    if production_kwh <= LIMITE_PRODUCTION_S24:
-        return production_kwh * 0.1772
-    else:
-        return (LIMITE_PRODUCTION_S24 * 0.1772 + 
-                (production_kwh - LIMITE_PRODUCTION_S24) * 0.05)
+
 
 # Configuration de la page
 st.set_page_config(page_title="Simulateur Rhuma, rhum solaire en Corse", layout="wide")
@@ -471,8 +465,8 @@ st.markdown("""
 [GitHub Repository](https://github.com/JeanHuguesRobert/Rhuma)
 """)
 
-# Créer des onglets pour la documentation
-doc_tabs = st.tabs(["Crowdfunding", "Documentation technique", "Guide utilisateur"])
+# Créer des onglets pour la documentation et les simulations
+doc_tabs = st.tabs(["Crowdfunding", "Documentation technique", "Guide utilisateur", "Simulation 3D du Tracker"])
 
 with doc_tabs[0]:
     crowdfunding_content = read_markdown_file(os.path.join(DOCS_DIR, "crowdfunding.md"))
@@ -485,6 +479,10 @@ with doc_tabs[1]:
 with doc_tabs[2]:
     guide_content = read_markdown_file(os.path.join(DOCS_DIR, "user_guide.md"))
     st.markdown(guide_content)
+    
+with doc_tabs[3]:
+    # Afficher la simulation 3D du tracker solaire
+    solar_tracker_3d_section()
 
 def simulate_financial_scenarios(production_fixe, production_tracking):
     """
@@ -718,8 +716,9 @@ def export_to_google_sheets(data, sheet_name="Simulation Rhuma"):
         spreadsheet = client.create(sheet_name)
         
         # Partager le spreadsheet avec l'utilisateur
+        email = os.getenv('RHUMA_GOOGLE_SHEETS_CLIENT_EMAIL', '')  # Default to empty string if not set
         spreadsheet.share(
-            os.getenv('RHUMA_GOOGLE_SHEETS_CLIENT_EMAIL'),  # Utiliser l'email du service account
+            email,  # Now guaranteed to be a string
             perm_type='user',
             role='writer'
         )

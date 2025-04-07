@@ -6,12 +6,12 @@ class AttributeConfig:
     """Configuration d'un attribut de l'application"""
     default: Any
     type: type
-    min: Optional[Any] = None
-    max: Optional[Any] = None
     user_label: str
     description: str
-    unit: Optional[str] = None
     category: str
+    min: Optional[Any] = None
+    max: Optional[Any] = None
+    unit: Optional[str] = None
     i18n: Dict[str, str] = None
 
 # Configuration des attributs

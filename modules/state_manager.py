@@ -45,6 +45,10 @@ class StateManager:
                 return self.state["metadata"][key]
             except KeyError:
                 return default
+                
+    def get_state(self) -> dict:
+        """Retourne l'état complet"""
+        return self.state
     
     def set(self, key: str, value: Any) -> None:
         """Définit une valeur dans l'état"""
@@ -65,7 +69,7 @@ class StateManager:
             # Pour les métadonnées, on ne fait pas de validation
             self.state["metadata"][key] = value
     
-    def get_config(self, key: str) -> AttributeConfig:
+    def get_config(self, key: str) -> Optional[AttributeConfig]:
         """Obtient la configuration d'un attribut"""
         return ATTRIBUTE_CONFIGS.get(key)
     

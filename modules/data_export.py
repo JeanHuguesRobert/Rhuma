@@ -5,6 +5,33 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.chart import BarChart, Reference
 from openpyxl.utils.dataframe import dataframe_to_rows
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+import os
+
+def get_google_sheet_client():
+    """
+    Initialise et retourne un client Google Sheets
+    
+    Returns:
+        gspread.Client: Client Google Sheets configuré
+    """
+    try:
+        # Charger les credentials depuis les variables d'environnement
+        creds_json = os.getenv('GOOGLE_SHEETS_CREDENTIALS_JSON')
+        if not creds_json:
+            return None
+            
+        # Créer les credentials
+        scope = 'https://spreadsheets.google.com/feeds https://www.googleapis.com/auth/drive'
+        credentials = ServiceAccountCredentials.from_json_keyfile_dict(
+            json.loads(creds_json), scope)
+            
+        # Créer et retourner le client
+        return gspread.authorize(credentials.credentials)
+    except Exception as e:
+        print(f"Erreur lors de l'initialisation du client Google Sheets: {e}")
+        return None
 
 def export_to_google_sheets(data, sheet_name="Simulation Rhuma"):
     """
@@ -20,8 +47,9 @@ def export_to_google_sheets(data, sheet_name="Simulation Rhuma"):
         spreadsheet = client.create(sheet_name)
         
         # Partager le spreadsheet avec l'utilisateur
+        email = os.getenv('RHUMA_GOOGLE_SHEETS_CLIENT_EMAIL', '')  # Default to empty string if not set
         spreadsheet.share(
-            os.getenv('RHUMA_GOOGLE_SHEETS_CLIENT_EMAIL'),
+            email,  # Now guaranteed to be a string
             perm_type='user',
             role='writer'
         )
