@@ -2,15 +2,15 @@
 
 ## 🌱 Concept
 
-Notre projet révolutionnaire combine la production de rhum de qualité avec l'énergie solaire verte, créant un modèle circulaire unique en Corse.
+Notre projet innovant combine la production de rhum de qualité avec l'énergie solaire verte, créant un modèle circulaire unique en Corse.
 
 ## 🌞 Énergie Solaire
 
 - **Production locale** : Installation photovoltaïque optimisée
-  - 500kWc sur la serre (tarif S24 garanti jusqu'à 1600h/an)
+  - 500kWc sur la serre
   - 500kWc au sol pour l'autoconsommation collective
 - **Tarification avantageuse** :
-  - Tarif S24 garanti pour la production de la serre
+  - Tarif S24 garanti pour la production de la serre (garanti jusqu'à 1600h/an)
   - Autoconsommation collective au tarif "Toujours heures creuses !"
 - **Sécurité financière** : Limite légale de 1 MWc pour l'autoconsommation (évite droits d'accise)
 

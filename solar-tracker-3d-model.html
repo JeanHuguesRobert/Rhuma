@@ -292,7 +292,7 @@
         side: THREE.DoubleSide
       });
       
-      // Augmenter la taille du panneau d'information pour une meilleure lisibilité
+      // Panneau d'information
       const infoGeometry = new THREE.PlaneGeometry(150, 40);
       const infoLabel = new THREE.Mesh(infoGeometry, infoMaterial);
       infoLabel.position.set(0, 1, -120);
@@ -305,7 +305,7 @@
     const compass = createCompass();
     scene.add(compass);
     
-    // Base en béton
+    // Base en béton, en pratique les mâts sont des piquets en T plantés
     const baseGeometry = new THREE.BoxGeometry(config.baseSize, config.baseHeight, config.baseSize);
     const baseMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
     const base = new THREE.Mesh(baseGeometry, baseMaterial);
@@ -481,7 +481,7 @@
     // Calculer la position du panneau en fonction des longueurs de câble
     function updatePanelPosition(cableSELength, cableSWLength) {
       // Position y initiale (hauteur)
-      let y = 40;
+      let y = 75;
       
       // Calculer les offsets en x et z qui fonctionnent avec les câbles donnés
       // Formule améliorée pour une meilleure correspondance physique
@@ -619,11 +619,11 @@
       let azimuth = toDegrees(Math.atan2(sinAzimuth, cosAzimuth));
       
       // Convertir de la convention astronomique (-180 à +180) à la convention géographique (0 à 360)
-      if (hourAngle > 0) {
-        azimuth = (azimuth + 360) % 360;
-      } else {
-        azimuth = (540 - azimuth) % 360;
-      }
+      // Pour l'hémisphère nord: 0° = Sud, 90° = Ouest, 180° = Nord, 270° = Est
+      azimuth = (azimuth + 180) % 360;
+      
+      // Correction pour que le soleil apparaisse à l'est le matin et à l'ouest le soir
+      // Dans le système de coordonnées Three.js: +X = Est, -X = Ouest, +Z = Sud, -Z = Nord
       
       return azimuth;
     }
@@ -679,8 +679,35 @@
       return date.toLocaleDateString('fr-FR', options);
     }
     
+    // Fonction pour déterminer la saison et la date en fonction du jour de l'année
+    function getSeasonAndDate(dayOfYear) {
+      // Déterminer la saison
+      let seasonText = "";
+      if (dayOfYear >= 355 || dayOfYear < 80) {
+        seasonText = "Hiver";
+      } else if (dayOfYear >= 80 && dayOfYear < 172) {
+        seasonText = "Printemps";
+      } else if (dayOfYear >= 172 && dayOfYear < 266) {
+        seasonText = "Été";
+      } else {
+        seasonText = "Automne";
+      }
+      
+      // Convertir le jour de l'année en date lisible
+      const dateStr = dayOfYearToDate(dayOfYear);
+      
+      return { seasonText, dateStr };
+    }
+    
     // Mettre à jour la position du soleil
     function updateSunPosition(hour, manualElevation) {
+      // Mettre à jour le jour de l'année en fonction de l'élévation du curseur
+      config.dayOfYear = calculateDayOfYear(manualElevation);
+      
+      // Variables pour stocker les informations solaires
+      let elevation, azimuth, x, y, z;
+      const radius = 250;
+      
       // En mode manuel, utiliser directement les valeurs des curseurs
       if (!config.tracking) {
         // Convertir l'heure en angle pour une trajectoire continue
@@ -689,110 +716,71 @@
         const angle = hourNormalized * Math.PI; // Convertir en radians (0 à π)
         
         // Utiliser l'élévation du curseur
-        const calculatedElevation = manualElevation;
-        const elevationRad = calculatedElevation * Math.PI / 180;
+        elevation = manualElevation;
+        const elevationRad = elevation * Math.PI / 180;
+        
+        // Calculer l'azimut en fonction de l'heure (0° = Sud, 90° = Ouest, 270° = Est)
+        azimuth = (hourNormalized * 180) + 180;
+        if (azimuth > 360) azimuth -= 360;
         
         // Calculer la position du soleil avec une trajectoire réaliste
-        const radius = 250;
-        
-        // Pour une latitude nord (comme Corte à 42.3°N), le soleil doit suivre une trajectoire
-        // qui va de l'est au sud puis à l'ouest, en restant toujours dans la partie sud du ciel
-        
         // x est l'axe est-ouest (-x = ouest, +x = est)
         // z est l'axe nord-sud (-z = nord, +z = sud)
         // y est la hauteur
         
-        // Calculer la position x (est-ouest)
-        const x = Math.sin(angle) * radius * Math.cos(elevationRad);
+        // Convertir l'élévation et l'azimut en coordonnées cartésiennes
+        y = Math.sin(elevationRad) * radius;
+        const horizontalRadius = Math.cos(elevationRad) * radius;
         
-        // Calculer la hauteur y
-        const y = Math.sin(elevationRad) * radius;
+        // Dans notre système: +X = Est, -X = Ouest, +Z = Sud, -Z = Nord
+        // Avec l'azimut: 0° = Sud, 90° = Ouest, 180° = Nord, 270° = Est
+        // Le soleil se lève à l'est (270°) et se couche à l'ouest (90°)
+        x = Math.sin(toRadians(azimuth)) * horizontalRadius; // Positif pour que le soleil se lève à l'est
+        z = Math.cos(toRadians(azimuth)) * horizontalRadius; // Positif pour que le soleil soit au sud dans l'hémisphère nord
+      } 
+      else {
+        // En mode tracking, calculer la position réelle du soleil
+        // Calculer la déclinaison solaire pour ce jour
+        const declination = calculateSolarDeclination(config.dayOfYear);
         
-        // Calculer la position z (nord-sud)
-        // Utiliser une fonction qui garantit que z reste toujours positif (sud)
-        // pour une latitude nord comme Corte
-        const z = Math.abs(Math.cos(angle)) * radius * Math.cos(elevationRad);
+        // Calculer l'heure solaire vraie
+        const trueSolarTime = calculateTrueSolarTime(hour, config.longitude, config.timeZone, config.dayOfYear);
         
-        sun.position.set(x, y, z);
-        sunLight.position.set(x, y, z);
+        // Calculer l'angle horaire
+        const hourAngle = calculateHourAngle(trueSolarTime);
         
-        // Mettre à jour le jour de l'année en fonction de l'élévation
-        config.dayOfYear = calculateDayOfYear(manualElevation);
+        // Calculer l'élévation solaire
+        elevation = calculateSolarElevation(config.latitude, declination, hourAngle);
         
-        // Afficher la saison (jour de l'année)
-        let seasonText = "";
-        if (config.dayOfYear >= 355 || config.dayOfYear < 80) {
-          seasonText = "Hiver";
-        } else if (config.dayOfYear >= 80 && config.dayOfYear < 172) {
-          seasonText = "Printemps";
-        } else if (config.dayOfYear >= 172 && config.dayOfYear < 266) {
-          seasonText = "Été";
-        } else {
-          seasonText = "Automne";
-        }
+        // Calculer l'azimut solaire
+        azimuth = calculateSolarAzimuth(config.latitude, declination, hourAngle, elevation);
         
-        // Convertir le jour de l'année en date lisible
-        const dateStr = dayOfYearToDate(config.dayOfYear);
+        // Convertir l'élévation et l'azimut en coordonnées cartésiennes
+        y = Math.sin(toRadians(elevation)) * radius;
+        const horizontalRadius = Math.cos(toRadians(elevation)) * radius;
         
-        // Mettre à jour l'affichage
-        document.getElementById('sunElevationValue').textContent = 
-          Math.round(calculatedElevation) + '° (' + seasonText + ')';
-        document.getElementById('dateValue').textContent = `(${dateStr})`;
-        
-        return;
+        // Dans notre système: +X = Est, -X = Ouest, +Z = Sud, -Z = Nord
+        // Avec l'azimut corrigé: 0° = Sud, 90° = Ouest, 180° = Nord, 270° = Est
+        // Le soleil se lève à l'est (270°) et se couche à l'ouest (90°)
+        x = Math.sin(toRadians(azimuth)) * horizontalRadius; // Positif pour que le soleil se lève à l'est
+        z = Math.cos(toRadians(azimuth)) * horizontalRadius; // Positif pour que le soleil soit au sud dans l'hémisphère nord
       }
-      
-      // En mode tracking, calculer la position réelle du soleil
-      // Mettre à jour le jour de l'année en fonction de l'élévation du curseur
-      config.dayOfYear = calculateDayOfYear(manualElevation);
-      
-      // Calculer la déclinaison solaire pour ce jour
-      const declination = calculateSolarDeclination(config.dayOfYear);
-      
-      // Calculer l'heure solaire vraie
-      const trueSolarTime = calculateTrueSolarTime(hour, config.longitude, config.timeZone, config.dayOfYear);
-      
-      // Calculer l'angle horaire
-      const hourAngle = calculateHourAngle(trueSolarTime);
-      
-      // Calculer l'élévation solaire
-      const elevation = calculateSolarElevation(config.latitude, declination, hourAngle);
-      
-      // Calculer l'azimut solaire
-      const azimuth = calculateSolarAzimuth(config.latitude, declination, hourAngle, elevation);
-      
-      // Convertir l'élévation et l'azimut en coordonnées cartésiennes
-      const radius = 250;
-      const y = Math.sin(toRadians(elevation)) * radius;
-      const horizontalRadius = Math.cos(toRadians(elevation)) * radius;
-      const x = Math.sin(toRadians(azimuth)) * horizontalRadius;
-      const z = Math.cos(toRadians(azimuth)) * horizontalRadius;
       
       // Mettre à jour la position du soleil
       sun.position.set(x, y, z);
       sunLight.position.set(x, y, z);
       
-      // Afficher l'élévation calculée
-      document.getElementById('sunElevationValue').textContent = 
-        Math.round(elevation) + '° (calculé)';
-      
-      // Afficher la saison (jour de l'année)
-      let seasonText = "";
-      if (config.dayOfYear >= 355 || config.dayOfYear < 80) {
-        seasonText = "Hiver";
-      } else if (config.dayOfYear >= 80 && config.dayOfYear < 172) {
-        seasonText = "Printemps";
-      } else if (config.dayOfYear >= 172 && config.dayOfYear < 266) {
-        seasonText = "Été";
-      } else {
-        seasonText = "Automne";
-      }
-      
-      // Convertir le jour de l'année en date lisible
-      const dateStr = dayOfYearToDate(config.dayOfYear);
+      // Obtenir les informations de saison et de date
+      const { seasonText, dateStr } = getSeasonAndDate(config.dayOfYear);
       
       // Mettre à jour l'affichage
-      document.getElementById('sunElevationValue').textContent += ` (${seasonText})`;
+      if (config.tracking) {
+        document.getElementById('sunElevationValue').textContent = 
+          Math.round(elevation) + '° (calculé) (' + seasonText + ')';
+      } else {
+        document.getElementById('sunElevationValue').textContent = 
+          Math.round(elevation) + '° (' + seasonText + ')';
+      }
       document.getElementById('dateValue').textContent = `(${dateStr})`;
       
       // Si le tracking est activé, ajuster le panneau pour qu'il soit perpendiculaire aux rayons du soleil
@@ -811,6 +799,14 @@
         }
         // Inverser car le panneau doit faire face au soleil
         optimalTiltZ = -optimalTiltZ;
+        
+        // Afficher les angles optimaux calculés et les informations solaires
+        document.getElementById('angleStat').innerHTML = `
+          Inclinaison optimale: ${Math.round(optimalTiltX)}°<br>
+          Orientation optimale: ${Math.round(optimalTiltZ)}°<br>
+          Élévation solaire: ${Math.round(elevation)}°<br>
+          Azimut solaire: ${Math.round(azimuth)}°
+        `;
         
         // Calculer les longueurs de câble nécessaires pour atteindre cette orientation
         // Modèle physique plus réaliste basé sur la géométrie du système à trois mâts

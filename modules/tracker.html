@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracker Solaire 3D Avancé</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        let scene, camera, renderer, panel, masts = [], cables = [];
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            document.body.appendChild(renderer.domElement);
+
+            // Contrôles de la caméra
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.25;
+            controls.enableZoom = true;
+
+            // Lumière
+            const light = new THREE.DirectionalLight(0xffffff, 1);
+            light.position.set(10, 10, 10).normalize();
+            light.castShadow = true;
+            scene.add(light);
+
+            // Panneau solaire
+            const panelGeometry = new THREE.BoxGeometry(2, 0.1, 3);
+            const panelMaterial = new THREE.MeshPhongMaterial({ color: 0x0077be });
+            panel = new THREE.Mesh(panelGeometry, panelMaterial);
+            panel.position.y = 5;
+            panel.castShadow = true;
+            panel.receiveShadow = true;
+            scene.add(panel);
+
+            // Mâts
+            const mastGeometry = new THREE.CylinderGeometry(0.1, 0.1, 8, 32);
+            const mastMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
+            const positions = [
+                { x: -3, z: -3 }, // Mât sud-ouest
+                { x: 3, z: -3 },  // Mât sud-est
+                { x: 0, z: 3 }    // Mât nord
+            ];
+
+            positions.forEach((pos, index) => {
+                const mast = new THREE.Mesh(mastGeometry, mastMaterial);
+                mast.position.set(pos.x, -4, pos.z);
+                mast.castShadow = true;
+                mast.receiveShadow = true;
+                scene.add(mast);
+                masts.push(mast);
+            });
+
+            // Câbles
+            const panelCorners = [
+                new THREE.Vector3(-1, 0, -1.5), // Coin arrière-gauche
+                new THREE.Vector3(1, 0, -1.5),  // Coin arrière-droit
+                new THREE.Vector3(0, 0, 1.5)    // Coin avant
+            ];
+
+            positions.forEach((pos, index) => {
+                const cableGeometry = new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(pos.x, -4, pos.z),
+                    panelCorners[index]
+                ]);
+                const cableMaterial = new THREE.LineBasicMaterial({ color: 0x555555 });
+                const cable = new THREE.Line(cableGeometry, cableMaterial);
+                cable.castShadow = true;
+                scene.add(cable);
+                cables.push(cable);
+            });
+
+            // Sol
+            const groundGeometry = new THREE.PlaneGeometry(20, 20);
+            const groundMaterial = new THREE.MeshPhongMaterial({ color: 0xaaaaaa });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -4.5;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            camera.position.set(10, 10, 20);
+            camera.lookAt(scene.position);
+
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const time = Date.now() * 0.001;
+            const sunAngleX = Math.sin(time * 0.5) * 0.5;
+            const sunAngleY = Math.cos(time * 0.5) * 0.5;
+
+            // Calculer les longueurs des câbles en tenant compte de la gravité
+            const cableLengths = calculateCableLengths(sunAngleX, sunAngleY);
+
+            // Mettre à jour les câbles
+            const panelCorners = [
+                new THREE.Vector3(-1, 5, -1.5), // Coin arrière-gauche
+                new THREE.Vector3(1, 5, -1.5),  // Coin arrière-droit
+                new THREE.Vector3(0, 5, 1.5)    // Coin avant
+            ];
+
+            cables.forEach((cable, index) => {
+                const pos = masts[index].position;
+                const cableEnd = panelCorners[index].clone().add(new THREE.Vector3(0, cableLengths[index], 0));
+                cable.geometry.setFromPoints([
+                    new THREE.Vector3(pos.x, pos.y, pos.z),
+                    cableEnd
+                ]);
+            });
+
+            panel.rotation.x = sunAngleX;
+            panel.rotation.z = sunAngleY;
+
+            renderer.render(scene, camera);
+        }
+
+        function calculateCableLengths(angleX, angleZ) {
+            // Calcul simplifié des longueurs des câbles en tenant compte de la gravité
+            const baseLength = 5;
+            const gravityFactor = 0.5; // Facteur pour simuler l'effet de la gravité
+            const lengths = [
+                baseLength + Math.sin(angleX) * gravityFactor,
+                baseLength + Math.cos(angleZ) * gravityFactor,
+                baseLength + Math.sin(angleX + angleZ) * gravityFactor
+            ];
+            return lengths;
+        }
+
+        init();
+    </script>
+</body>
+</html>

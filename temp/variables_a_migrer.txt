@@ -1,0 +1,24 @@
+Variables à migrer vers le système d'attributs:
+
+1. Variables du système de tracking solaire:
+   - baseCableLength: Longueur de base des câbles du système de tracking (80)
+   - tiltXFactor: Facteur d'ajustement pour l'inclinaison nord-sud (0.35)
+   - tiltZFactor: Facteur d'ajustement pour l'orientation est-ouest (0.8)
+   - minLength: Longueur minimale des câbles (30)
+   - maxLength: Longueur maximale des câbles (120)
+   - maxDifference: Différence maximale entre les longueurs de câbles (50)
+
+2. Variables du système PV:
+   - trackingFactor: Facteur moyen de gain avec tracking (1.3)
+   - losses: Pertes standard du système PV (14%)
+
+3. Variables financières déjà dans le système d'attributs mais utilisées directement dans le code:
+   - autoconsommation_fixe
+   - autoconsommation_tracking
+   - tarif_s24
+   - tarif_heures_creuses
+   - cout_fixe
+   - cout_tracking
+   - cout_maintenance
+   - cout_assurance
+   - cout_production

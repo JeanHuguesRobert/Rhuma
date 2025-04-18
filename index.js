@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 
-// Start Streamlit application
-const streamlit = spawn('streamlit', ['run', 'streamlit_app.py']);
+// Start Streamlit application using "python -m streamlit run streamlit_app.py"
+const streamlit = spawn('python', ['-m', 'streamlit', 'run', 'streamlit_app.py']);
 
 // Stream output to console
 streamlit.stdout.on('data', (data) => {

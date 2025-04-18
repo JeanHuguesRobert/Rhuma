@@ -16,6 +16,205 @@ class AttributeConfig:
 
 # Configuration des attributs
 ATTRIBUTE_CONFIGS = {
+    # Métadonnées du projet
+    'id': AttributeConfig(
+        default='rhuma',
+        type=str,
+        user_label="ID du Projet",
+        description="Identifiant technique utilisé pour les fichiers de configuration",
+        category="Métadonnées",
+        i18n={
+            'en': "Project ID",
+            'fr': "ID du Projet"
+        }
+    ),
+    'label': AttributeConfig(
+        default='Rhum Solaire de Corse',
+        type=str,
+        user_label="Label du Projet",
+        description="Nom affiché dans l'interface utilisateur",
+        category="Métadonnées",
+        i18n={
+            'en': "Project Label",
+            'fr': "Label du Projet"
+        }
+    ),
+    'version': AttributeConfig(
+        default='1.0.0',
+        type=str,
+        user_label="Version",
+        description="Version du projet",
+        category="Métadonnées",
+        i18n={
+            'en': "Version",
+            'fr': "Version"
+        }
+    ),
+    
+    # Tracker Solaire 3D - Paramètres de calcul astronomique
+    'applyRefraction': AttributeConfig(
+        default=True,
+        type=bool,
+        user_label="Appliquer la réfraction atmosphérique",
+        description="Appliquer la correction de réfraction atmosphérique pour les calculs de position solaire",
+        category="Tracker Solaire 3D",
+        i18n={
+            'en': "Apply Atmospheric Refraction",
+            'fr': "Appliquer la réfraction atmosphérique"
+        }
+    ),
+    'timezone': AttributeConfig(
+        default=1,
+        type=int,
+        min=-12,
+        max=12,
+        user_label="Fuseau horaire",
+        description="Fuseau horaire (UTC+timezone)",
+        unit="h",
+        category="Tracker Solaire 3D",
+        i18n={
+            'en': "Timezone",
+            'fr': "Fuseau horaire"
+        }
+    ),
+    
+    # Tracker Solaire 3D - Contraintes mécaniques
+    'minTiltX': AttributeConfig(
+        default=15,
+        type=float,
+        min=0,
+        max=45,
+        user_label="Inclinaison minimale",
+        description="Inclinaison minimale du panneau (axe X)",
+        unit="°",
+        category="Tracker Solaire 3D",
+        i18n={
+            'en': "Minimum Tilt X",
+            'fr': "Inclinaison minimale"
+        }
+    ),
+    'maxTiltX': AttributeConfig(
+        default=75,
+        type=float,
+        min=45,
+        max=90,
+        user_label="Inclinaison maximale",
+        description="Inclinaison maximale du panneau (axe X)",
+        unit="°",
+        category="Tracker Solaire 3D",
+        i18n={
+            'en': "Maximum Tilt X",
+            'fr': "Inclinaison maximale"
+        }
+    ),
+    'baseCableLength': AttributeConfig(
+        default=80,
+        type=float,
+        min=30,
+        max=150,
+        user_label="Longueur de câble de base",
+        description="Longueur de câble de base pour le système de tracking",
+        unit="cm",
+        category="Tracker Solaire 3D",
+        i18n={
+            'en': "Base Cable Length",
+            'fr': "Longueur de câble de base"
+        }
+    ),
+    'tiltXFactor': AttributeConfig(
+        default=0.35,
+        type=float,
+        min=0.1,
+        max=1.0,
+        user_label="Facteur d'inclinaison X",
+        description="Facteur de conversion entre l'angle d'inclinaison et la longueur de câble",
+        category="Tracker Solaire 3D",
+        i18n={
+            'en': "Tilt X Factor",
+            'fr': "Facteur d'inclinaison X"
+        }
+    ),
+    'tiltZFactor': AttributeConfig(
+        default=0.8,
+        type=float,
+        min=0.1,
+        max=1.5,
+        user_label="Facteur d'orientation Z",
+        description="Facteur de conversion entre l'angle d'orientation et la longueur de câble",
+        category="Tracker Solaire 3D",
+        i18n={
+            'en': "Tilt Z Factor",
+            'fr': "Facteur d'orientation Z"
+        }
+    ),
+    'minLength': AttributeConfig(
+        default=30,
+        type=float,
+        min=10,
+        max=50,
+        user_label="Longueur minimale de câble",
+        description="Longueur minimale des câbles du système de tracking",
+        unit="cm",
+        category="Tracker Solaire 3D",
+        i18n={
+            'en': "Minimum Cable Length",
+            'fr': "Longueur minimale de câble"
+        }
+    ),
+    'maxLength': AttributeConfig(
+        default=120,
+        type=float,
+        min=80,
+        max=200,
+        user_label="Longueur maximale de câble",
+        description="Longueur maximale des câbles du système de tracking",
+        unit="cm",
+        category="Tracker Solaire 3D",
+        i18n={
+            'en': "Maximum Cable Length",
+            'fr': "Longueur maximale de câble"
+        }
+    ),
+    'maxDifference': AttributeConfig(
+        default=50,
+        type=float,
+        min=20,
+        max=100,
+        user_label="Différence maximale entre câbles",
+        description="Différence maximale autorisée entre les longueurs des deux câbles",
+        unit="cm",
+        category="Tracker Solaire 3D",
+        i18n={
+            'en': "Maximum Cable Difference",
+            'fr': "Différence maximale entre câbles"
+        }
+    ),
+    'elasticity': AttributeConfig(
+        default=0.05,
+        type=float,
+        min=0,
+        max=0.2,
+        user_label="Élasticité des câbles",
+        description="Coefficient d'élasticité des câbles (0 = rigide, 1 = très élastique)",
+        category="Tracker Solaire 3D",
+        i18n={
+            'en': "Cable Elasticity",
+            'fr': "Élasticité des câbles"
+        }
+    ),
+    'demoSpeed': AttributeConfig(
+        default=1,
+        type=float,
+        min=0.1,
+        max=5,
+        user_label="Vitesse de démonstration",
+        description="Vitesse de la démonstration du tracker solaire",
+        category="Tracker Solaire 3D",
+        i18n={
+            'en': "Demo Speed",
+            'fr': "Vitesse de démonstration"
+        }
+    ),
     # Surface et Rendement
     'surface_canne': AttributeConfig(
         default=3000,
@@ -355,5 +554,140 @@ ATTRIBUTE_CONFIGS = {
             'en': "Amortization Period",
             'fr': "Durée d'amortissement"
         }
+    ),
+    # Système de tracking solaire
+    'baseCableLength': AttributeConfig(
+        default=80,
+        type=float,
+        min=30,
+        max=150,
+        user_label="Longueur de base des câbles",
+        description="Longueur de base des câbles du système de tracking",
+        unit="cm",
+        category="Tracking Solaire",
+        i18n={
+            'en': "Base Cable Length",
+            'fr': "Longueur de base des câbles"
+        }
+    ),
+    'tiltXFactor': AttributeConfig(
+        default=0.35,
+        type=float,
+        min=0.1,
+        max=1.0,
+        user_label="Facteur d'inclinaison X",
+        description="Facteur d'ajustement pour l'inclinaison nord-sud",
+        unit="",
+        category="Tracking Solaire",
+        i18n={
+            'en': "Tilt X Factor",
+            'fr': "Facteur d'inclinaison X"
+        }
+    ),
+    'tiltZFactor': AttributeConfig(
+        default=0.8,
+        type=float,
+        min=0.1,
+        max=1.5,
+        user_label="Facteur d'orientation Z",
+        description="Facteur d'ajustement pour l'orientation est-ouest",
+        unit="",
+        category="Tracking Solaire",
+        i18n={
+            'en': "Tilt Z Factor",
+            'fr': "Facteur d'orientation Z"
+        }
+    ),
+    'minLength': AttributeConfig(
+        default=30,
+        type=float,
+        min=10,
+        max=50,
+        user_label="Longueur minimale des câbles",
+        description="Longueur minimale des câbles du système de tracking",
+        unit="cm",
+        category="Tracking Solaire",
+        i18n={
+            'en': "Minimum Cable Length",
+            'fr': "Longueur minimale des câbles"
+        }
+    ),
+    'maxLength': AttributeConfig(
+        default=120,
+        type=float,
+        min=80,
+        max=200,
+        user_label="Longueur maximale des câbles",
+        description="Longueur maximale des câbles du système de tracking",
+        unit="cm",
+        category="Tracking Solaire",
+        i18n={
+            'en': "Maximum Cable Length",
+            'fr': "Longueur maximale des câbles"
+        }
+    ),
+    'maxDifference': AttributeConfig(
+        default=50,
+        type=float,
+        min=20,
+        max=100,
+        user_label="Différence maximale entre câbles",
+        description="Différence maximale autorisée entre les longueurs de câbles",
+        unit="cm",
+        category="Tracking Solaire",
+        i18n={
+            'en': "Maximum Cable Difference",
+            'fr': "Différence maximale entre câbles"
+        }
+    ),
+    # Système PV
+    'trackingFactor': AttributeConfig(
+        default=1.3,
+        type=float,
+        min=1.0,
+        max=1.5,
+        user_label="Facteur de gain tracking",
+        description="Facteur moyen de gain de production avec le système de tracking",
+        unit="",
+        category="Énergie PV",
+        i18n={
+            'en': "Tracking Gain Factor",
+            'fr': "Facteur de gain tracking"
+        }
+    ),
+    'losses': AttributeConfig(
+        default=14.0,
+        type=float,
+        min=0.0,
+        max=30.0,
+        user_label="Pertes système PV",
+        description="Pertes standard du système PV (câblage, conversion, etc.)",
+        unit="%",
+        category="Pertes",
+        i18n={
+            'en': "PV System Losses",
+            'fr': "Pertes système PV"
+        }
     )
 }
+
+# Nouvelle fonction pour valider et normaliser les paramètres d'entrée
+def validate_parameters(input_params: dict) -> dict:
+    validated = {}
+    for key, config in ATTRIBUTE_CONFIGS.items():
+        # Utiliser la valeur fournie ou la valeur par défaut
+        value = input_params.get(key, config.default)
+        # S'assurer que la valeur est du bon type, sinon tenter la conversion
+        try:
+            if not isinstance(value, config.type):
+                value = config.type(value)
+        except Exception:
+            value = config.default
+        # Appliquer le minimum si défini
+        if config.min is not None and value < config.min:
+            value = config.min
+        # Appliquer le maximum si défini
+        if config.max is not None and value > config.max:
+            value = config.max
+        validated[key] = value
+    return validated

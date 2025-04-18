@@ -21,13 +21,11 @@ class StateManager:
         """Initialise l'état global avec les valeurs par défaut"""
         self.state = {
             "metadata": {
-                "id": os.getenv('RHUMA_ID', 'rhuma'),
-                "label": os.getenv('RHUMA_LABEL', 'Rhum Solaire de Corse'),
-                "version": os.getenv('RHUMA_VERSION', "1.0.0"),
                 "timestamp": datetime.now().isoformat(),
                 "language": os.getenv('RHUMA_LANGUAGE', 'fr')
             },
-            "configuration": {}
+            "configuration": {},
+            "results": {}
         }
         
         # Initialise les attributs avec leurs valeurs par défaut
@@ -40,11 +38,15 @@ class StateManager:
             # D'abord chercher dans configuration
             return self.state["configuration"][key]
         except KeyError:
-            # Puis dans metadata
+            # Puis dans results
             try:
-                return self.state["metadata"][key]
+                return self.state["results"][key]
             except KeyError:
-                return default
+                # Puis dans metadata
+                try:
+                    return self.state["metadata"][key]
+                except KeyError:
+                    return default
                 
     def get_state(self) -> dict:
         """Retourne l'état complet"""
@@ -66,8 +68,21 @@ class StateManager:
             
             self.state["configuration"][key] = value
         else:
-            # Pour les métadonnées, on ne fait pas de validation
-            self.state["metadata"][key] = value
+            # Déterminer si c'est un résultat ou une métadonnée
+            # Liste des clés de résultats connues
+            result_keys = [
+                "production_pv", "production_au_sol", "autoconsommation", "revente",
+                "revenu_pv", "revenu_rhum", "cout_pv", "cout_serre", "cout_total",
+                "benefice_net", "roi", "temps_retour", "monthly_production", "scenarios",
+                "couts_annuels"
+            ]
+            
+            if key in result_keys:
+                # Pour les résultats, on ne fait pas de validation
+                self.state["results"][key] = value
+            else:
+                # Pour les métadonnées, on ne fait pas de validation
+                self.state["metadata"][key] = value
     
     def get_config(self, key: str) -> Optional[AttributeConfig]:
         """Obtient la configuration d'un attribut"""
@@ -87,6 +102,14 @@ class StateManager:
         """Obtient les métadonnées de l'état"""
         return self.state["metadata"]
     
+    def get_results(self) -> Dict[str, Any]:
+        """Obtient les résultats de l'état"""
+        return self.state["results"]
+    
+    def get_configuration(self) -> Dict[str, Any]:
+        """Obtient la configuration de l'état"""
+        return self.state["configuration"]
+    
     def get_all(self) -> Dict[str, Any]:
         """Obtient l'état complet"""
         return self.state
@@ -95,8 +118,59 @@ class StateManager:
 state_manager = StateManager()
 
 # Fonction utilitaire pour accéder facilement à l'état
-def rhuma(key: str, value: Any = None) -> Any:
+def rhuma(key: str) -> Any:
     """Fonction utilitaire pour accéder/modifier l'état"""
-    if value is not None:
-        state_manager.set(key, value)
-    return state_manager.get(key)
+    value = state_manager.get(key)
+    if value is None:
+        config = ATTRIBUTE_CONFIGS.get(key)
+        if config:
+            return config.default
+    return value
+
+# Fonctions utilitaires pour accéder aux labels et descriptions des attributs
+def rhuma_label(key: str, lang: Optional[str] = None) -> str:
+    """Fonction utilitaire pour obtenir le label utilisateur d'un attribut"""
+    config = ATTRIBUTE_CONFIGS.get(key)
+    if config:
+        if lang is not None and config.i18n and lang in config.i18n:
+            return config.i18n[lang]
+        return config.user_label
+    return key
+
+def rhuma_description(key: str) -> str:
+    """Fonction utilitaire pour obtenir la description d'un attribut"""
+    config = ATTRIBUTE_CONFIGS.get(key)
+    if config:
+        return config.description
+    return ""
+
+def get_attribute_config(key: str) -> Optional[AttributeConfig]:
+    """Fonction utilitaire pour obtenir la configuration complète d'un attribut"""
+    return ATTRIBUTE_CONFIGS.get(key)
+
+def get_attribute_unit(key: str) -> str:
+    """Fonction utilitaire pour obtenir l'unité d'un attribut"""
+    config = ATTRIBUTE_CONFIGS.get(key)
+    if config and config.unit:
+        return config.unit
+    return ""
+
+def get_attribute_category(key: str) -> str:
+    """Fonction utilitaire pour obtenir la catégorie d'un attribut"""
+    config = ATTRIBUTE_CONFIGS.get(key)
+    if config:
+        return config.category
+    return ""
+
+def get_all_attributes() -> Dict[str, AttributeConfig]:
+    """Fonction utilitaire pour obtenir tous les attributs configurés"""
+    return ATTRIBUTE_CONFIGS
+
+def get_attributes_by_category() -> Dict[str, Dict[str, AttributeConfig]]:
+    """Fonction utilitaire pour obtenir les attributs regroupés par catégorie"""
+    categories = {}
+    for key, config in ATTRIBUTE_CONFIGS.items():
+        if config.category not in categories:
+            categories[config.category] = {}
+        categories[config.category][key] = config
+    return categories

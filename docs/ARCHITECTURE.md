@@ -9,14 +9,23 @@ Rhuma is a modular, service-oriented architecture designed to optimize rhum prod
 
 ```
 rhuma/
-├── modules/          # Modules
-│   ├── data_export.py    # Export des données
+├── modules/          
+│   ├── data_export.py    # Export des données vers Google Sheets, Excel, JSON...
+│   ├── exports.py        # Gestion des exports (JSON, CSV, Excel, ZIP)
+│   ├── financial.py      # Calculs financiers et simulation de scénarios
 │   ├── pvgis_analysis.py # Analyse PVGIS
-│   ├── attributes.py     # Configuration des attributs
-│   └── state_manager.py  # Gestionnaire d'état
-├── docs/             # Documentation
-└── tests/            # Tests
+│   ├── state_manager.py  # Gestionnaire d'état
+│   └── solar_tracker_3d.py  # Simulation 3D du tracker
+├── docs/                # Documentation (mise à jour)
+└── tests/               # Tests unitaires et d'intégration
 ```
+
+### 2. Modules Mis à Jour
+- Le module **financial.py** contient désormais le calcul des coûts et la simulation financière.
+- Le module **exports.py** centralise tous les exports vers JSON, CSV, Excel et un fichier ZIP complet.
+- La documentation a été actualisée pour refléter ces changements.
+
+## Architectural Components
 
 ### 2. Composants Principaux
 
@@ -143,13 +152,15 @@ L'architecture de Rhuma est conçue pour optimiser la production de rhum dans un
 
 ```
 rhuma/
-├── modules/          # Modules
-│   ├── data_export.py    # Export des données
+├── modules/          
+│   ├── data_export.py    # Export des données vers Google Sheets, Excel, JSON...
+│   ├── exports.py        # Gestion des exports (JSON, CSV, Excel, ZIP)
+│   ├── financial.py      # Calculs financiers et simulation de scénarios
 │   ├── pvgis_analysis.py # Analyse PVGIS
-│   ├── attributes.py     # Configuration des attributs
-│   └── state_manager.py  # Gestionnaire d'état
-├── docs/             # Documentation
-└── tests/            # Tests
+│   ├── state_manager.py  # Gestionnaire d'état
+│   └── solar_tracker_3d.py  # Simulation 3D du tracker
+├── docs/                # Documentation (mise à jour)
+└── tests/               # Tests unitaires et d'intégration
 ```
 
 ## 🛠️ Configuration Technique

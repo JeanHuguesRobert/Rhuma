@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import subprocess
 import json
 from modules.state_manager import StateManager
+from modules.state_manager import rhuma  # Updated: import rhuma from state_manager
 
 def pvgis_analysis_section():
     """
@@ -28,8 +29,10 @@ def pvgis_analysis_section():
         with col2:
             # Configuration du système PV
             st.subheader("⚡ Configuration PV")
+            production_total = rhuma("pv_serre") + rhuma("pv_sol")
+            production_total = float(production_total)  # Ensure production_total is a float
             capacity = st.number_input("Capacité installée (kWc)", 
-                                     value=state_manager.get_attribute('pv_serre') + state_manager.get_attribute('pv_sol'), 
+                                     value=production_total, 
                                      min_value=0.0)
             tilt = st.slider("Angle de pose (°)", 0, 90, 30)
             orientation = st.slider("Orientation (°)", -180, 180, -180)
@@ -54,7 +57,7 @@ def pvgis_analysis_section():
                 'angle': tilt,
                 'aspect': orientation,
                 'isTracking': tracking,
-                'losses': 14,  # Perte standard de 14%
+                'losses': rhuma('losses'),  # Utilisation de l'attribut centralisé
                 'rhuma_state': state_manager.get_state()
             }
             

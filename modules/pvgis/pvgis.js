@@ -1,5 +1,5 @@
 const axios = require('axios');
-const commander = require('commander');
+const { Command } = require('commander');  // added import for commander
 const jsPDF = require('jspdf');
 const { JSDOM } = require('jsdom');
 
@@ -107,7 +107,7 @@ class PVGISClient {
 
     calculateRevenue(annualProduction) {
         // Prix moyen de l'électricité - à ajuster selon le tarif
-        return annualProduction * 0.12; // €/kWh
+        return annualProduction * 0.13; // €/kWh
     }
 
     calculateROI(systemCost, annualRevenue) {
@@ -142,7 +142,8 @@ class PVGISClient {
 
     getTrackingSystemData(data) {
         // Simulation avec tracking
-        const trackingFactor = 1.3; // Facteur moyen de gain avec tracking
+        // Récupérer le facteur de tracking depuis l'état Rhuma
+const trackingFactor = data.inputs.rhuma_state?.configuration?.trackingFactor || 1.3; // Utiliser la valeur de l'attribut ou 1.3 par défaut
         const trackingProduction = data.outputs.pv.year * trackingFactor;
         
         return {
@@ -256,7 +257,7 @@ function formatOutput(data, format) {
 class PVGISCLI {
     constructor() {
         this.client = new PVGISClient();
-        this.program = new commander.Command();
+        this.program = new Command();
         this.setupCommands();
     }
 
