@@ -5,6 +5,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from modules.state_manager import rhuma, rhuma_label, rhuma_description, StateManager, state_manager
 from modules.tracking import TrackingSystemSimulation
+from openpyxl.workbook import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
 
 def get_pv_production_data():
     """Récupère les données de production PV depuis l'état global"""
@@ -857,6 +859,11 @@ with st.spinner("🔄 Calculs en cours..."):
         st.write("\n## Production d'Énergie")
         col1, col2, col3 = st.columns(3)
         col1.metric("⚡ Puissance PV (serre) installée", f"{puissance_pv:.0f} kWc")
+        # Calculate ideal PV production (serre + sol) with optimal conditions
+        pv_serre = rhuma("pv_serre")
+        pv_sol = rhuma("pv_sol")
+        production_pv_ideal = (pv_serre + pv_sol) * HEURES_PLEIN_SOLEIL  # Using 1600 full sun hours from config
+        
         col2.metric("⚡ Production serre idéale", f"{production_pv_ideal/1000:.1f} MWh/an")
         col3.metric("⚡ Production serre réelle", f"{production_pv/1000:.1f} MWh/an")
 
