@@ -657,6 +657,7 @@ cout_production = st.sidebar.number_input(
     min_value=0.0,
     value=float(os.getenv('RHUMA_COUT_PRODUCTION', 30.0)),
     step=1.0,
+    key="sidebar_cout_production",
     help="Coût annuel de production de la canne à sucre et distillation"
 )
 
@@ -811,6 +812,7 @@ with econ_col2:
         min_value=0.0,
         value=float(os.getenv('RHUMA_COUT_PRODUCTION', 30.0)),
         step=1.0,
+        key="main_cout_production",
         help="Coût annuel de production de la canne à sucre et distillation"
     )
     
