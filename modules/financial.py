@@ -196,26 +196,30 @@ def simulate_financial_scenarios(production_fixe, production_tracking):
 
 def financial_simulation_section():
     st.header("📊 Simulation Financière")
-    
-    # Get PVGIS data
-    monthly_pv_production, total_pv_production = get_pv_production_data()
-    
+
     # Calcul de la puissance PV installée
-    puissance_pv = rhuma('pv_serre')
-    
-    # Calcul de la production PV idéale (sans pertes)
-    production_pv_ideal = total_pv_production / (1 - rhuma('pertes_pv'))
-    production_au_sol_ideal = rhuma('pv_sol') / (1 - rhuma('pertes_pv'))
+    pv_serre = rhuma('pv_serre')
+    pv_sol = rhuma('pv_sol')
+    pertes_pv = rhuma('pertes_pv') / 100  # Convert percentage to fraction
+
+    # Calcul de la production PV (basé sur les heures d'ensoleillement)
+    production_pv_serre = pv_serre * HEURES_PLEIN_SOLEIL * (1 - pertes_pv)
+    production_pv_sol = pv_sol * HEURES_PLEIN_SOLEIL * (1 - pertes_pv)
+    total_pv_production = production_pv_serre + production_pv_sol
+
+    # Production idéale (sans pertes)
+    production_pv_ideal = (pv_serre + pv_sol) * HEURES_PLEIN_SOLEIL
+    production_au_sol_ideal = pv_sol * HEURES_PLEIN_SOLEIL
     production_pv = total_pv_production
-    production_au_sol = rhuma('pv_sol')
-    
+    production_au_sol = production_pv_sol
+
     # Initialisation du simulateur de tracking
-    tracker = TrackingSystemSimulation()
-    
+    tracker = TrackingSystemSimulation(pv_serre)
+
     # Calcul des gains de tracking
-    tracking_gains = tracker.calculate_tracking_gains(rhuma('precision_tracking'), rhuma('precision_tracking'))
-    production_tracking = total_pv_production * (1 + tracking_gains['single_axis_gain'])
-    
+    tracking_bonus = rhuma('bonus_tracking') / 100  # Convert percentage to fraction
+    production_tracking = total_pv_production * (1 + tracking_bonus)
+
     # Simulation des scénarios
     scenarios = simulate_financial_scenarios(total_pv_production, production_tracking)
     
