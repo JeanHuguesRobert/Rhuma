@@ -13,7 +13,7 @@ from datetime import datetime
 import numpy as np
 from dotenv import load_dotenv
 
-from modules.exports import export_to_google_sheets, get_google_sheet_client
+from modules.financial import export_to_google_sheets, get_google_sheet_client
 from modules.pvgis_analysis import pvgis_analysis_section
 from modules.state_manager import rhuma, StateManager
 from modules.solar_tracker_3d import solar_tracker_3d_section
