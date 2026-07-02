@@ -747,7 +747,7 @@ with tech_col1:
     puissance_pv = st.number_input(
         "Puissance installée (kWc)",
         min_value=0.0,
-        value=int(os.getenv('RHUMA_PUISSANCE_PV', 500.0)),
+        value=float(os.getenv('RHUMA_PUISSANCE_PV', 500.0)),
         step=50.0,
         help="Puissance totale du système PV"
     )
@@ -756,7 +756,7 @@ with tech_col1:
         "Pertes PV (%)",
         min_value=0.0,
         max_value=100.0,
-        value=int(os.getenv('RHUMA_PERTES_PV', 10.0)),
+        value=float(os.getenv('RHUMA_PERTES_PV', 10.0)),
         step=1.0,
         help="Pertes techniques du système PV"
     )
@@ -767,7 +767,7 @@ with tech_col2:
         "Pertes de tracking (%)",
         min_value=0.0,
         max_value=100.0,
-        value=int(os.getenv('RHUMA_PERTES_TRACKING', 5.0)),
+        value=float(os.getenv('RHUMA_PERTES_TRACKING', 5.0)),
         step=1.0,
         help="Pertes liées à l'absence de trackers solaires"
     )
