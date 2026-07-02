@@ -654,7 +654,7 @@ cout_assurance = st.sidebar.number_input(
 
 cout_production = st.sidebar.number_input(
     "Coût production annuel (€/kWc)",
-    min_value=0,
+    min_value=0.0,
     value=float(os.getenv('RHUMA_COUT_PRODUCTION', 30.0)),
     step=1.0,
     help="Coût annuel de production de la canne à sucre et distillation"
