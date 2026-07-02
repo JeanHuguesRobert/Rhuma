@@ -8,6 +8,9 @@ from modules.tracking import TrackingSystemSimulation
 from openpyxl.workbook import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 
+# Constantes pour les calculs
+HEURES_PLEIN_SOLEIL = 1600  # Heures d'ensoleillement annuel en Corse
+
 def get_pv_production_data():
     """Récupère les données de production PV depuis l'état global"""
     monthly_pv_production = rhuma('monthly_pv_production')
