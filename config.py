@@ -4,28 +4,6 @@ Configuration pivot pour Rhuma
 
 import os
 from datetime import datetime
-from config import (
-    SURFACE_CANNE_MIN,
-    SURFACE_CANNE_MAX,
-    RENDEMENT_CANNE_MIN,
-    RENDEMENT_CANNE_MAX,
-    TENEUR_SUCRE_MIN,
-    TENEUR_SUCRE_MAX,
-    EFFICACITE_EXTRACTION_MIN,
-    EFFICACITE_EXTRACTION_MAX,
-    EFFICACITE_DISTILLATION_MIN,
-    EFFICACITE_DISTILLATION_MAX,
-    PV_SERRE_MAX,
-    PV_SOL_MAX,
-    TARIF_S24_MIN,
-    TARIF_S24_MAX,
-    TVA_MIN,
-    TVA_MAX,
-    LIMITE_PUISSANCE_S24,
-    HEURES_PLEIN_SOLEIL,
-    LIMITE_PRODUCTION_S24,
-    TARIF_S24_DEPASSEMENT
-)
 
 # Configuration pivot de Rhuma
 RHUMA = {
@@ -52,8 +30,8 @@ RHUMA = {
         "cout_assurance": float(os.getenv('RHUMA_COUT_ASSURANCE', '20')),
         "cout_production": float(os.getenv('RHUMA_COUT_PRODUCTION', '30')),
         "tarif_heures_creuses": float(os.getenv('RHUMA_TARIF_HEURES_CREUSES', '0.15')),
-        "autoconsommation_fixe": float(os.getenv('RHUMA_AUTOCONSOOMMATION_FIXE', '100000.0')),
-        "autoconsommation_tracking": float(os.getenv('RHUMA_AUTOCONSOOMMATION_TRACKING', '120000.0')),
+        "autoconsommation_fixe": float(os.getenv('RHUMA_AUTOCONSOMMATION_FIXE', '100000.0')),
+        "autoconsommation_tracking": float(os.getenv('RHUMA_AUTOCONSOMMATION_TRACKING', '120000.0')),
         "prix_rhum": float(os.getenv('RHUMA_PRIX_RHUM', '20.0')),
         "pertes_pv": float(os.getenv('RHUMA_PERTES_PV', '10.0')),
         "pertes_tracking": float(os.getenv('RHUMA_PERTES_TRACKING', '5.0')),

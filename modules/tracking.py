@@ -13,7 +13,7 @@ class TrackingSystemSimulation:
     def simulate(self):
         # Retrieve the bonus percentage from configuration.
         # For example, if bonus is 30 then production is increased by 30% (i.e. multiplied by 1.30)
-        bonus = float(rhuma("pertes_tracking"))  # Rename attribute if needed (e.g. "bonus_tracking")
+        bonus = float(rhuma("bonus_tracking"))
         return self.pv_value * (1 + bonus/100)
 
 def tracking_optimization_section(pv_value):
@@ -32,7 +32,7 @@ def simulate_tracking_production(pv_with_tracking):
     calculate the production without tracking.
     This is done by reversing the bonus multiplier.
     """
-    bonus = float(rhuma("pertes_tracking"))  # Assumes value like 30 for a 30% bonus
+    bonus = float(rhuma("bonus_tracking"))  # Assumes value like 30 for a 30% bonus
     # Production without tracking is the tracked production divided by (1 + bonus/100)
     production_without_tracking = pv_with_tracking / (1 + bonus/100)
     return production_without_tracking

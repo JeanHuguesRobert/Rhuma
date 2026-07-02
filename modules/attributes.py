@@ -555,91 +555,6 @@ ATTRIBUTE_CONFIGS = {
             'fr': "Durée d'amortissement"
         }
     ),
-    # Système de tracking solaire
-    'baseCableLength': AttributeConfig(
-        default=80,
-        type=float,
-        min=30,
-        max=150,
-        user_label="Longueur de base des câbles",
-        description="Longueur de base des câbles du système de tracking",
-        unit="cm",
-        category="Tracking Solaire",
-        i18n={
-            'en': "Base Cable Length",
-            'fr': "Longueur de base des câbles"
-        }
-    ),
-    'tiltXFactor': AttributeConfig(
-        default=0.35,
-        type=float,
-        min=0.1,
-        max=1.0,
-        user_label="Facteur d'inclinaison X",
-        description="Facteur d'ajustement pour l'inclinaison nord-sud",
-        unit="",
-        category="Tracking Solaire",
-        i18n={
-            'en': "Tilt X Factor",
-            'fr': "Facteur d'inclinaison X"
-        }
-    ),
-    'tiltZFactor': AttributeConfig(
-        default=0.8,
-        type=float,
-        min=0.1,
-        max=1.5,
-        user_label="Facteur d'orientation Z",
-        description="Facteur d'ajustement pour l'orientation est-ouest",
-        unit="",
-        category="Tracking Solaire",
-        i18n={
-            'en': "Tilt Z Factor",
-            'fr': "Facteur d'orientation Z"
-        }
-    ),
-    'minLength': AttributeConfig(
-        default=30,
-        type=float,
-        min=10,
-        max=50,
-        user_label="Longueur minimale des câbles",
-        description="Longueur minimale des câbles du système de tracking",
-        unit="cm",
-        category="Tracking Solaire",
-        i18n={
-            'en': "Minimum Cable Length",
-            'fr': "Longueur minimale des câbles"
-        }
-    ),
-    'maxLength': AttributeConfig(
-        default=120,
-        type=float,
-        min=80,
-        max=200,
-        user_label="Longueur maximale des câbles",
-        description="Longueur maximale des câbles du système de tracking",
-        unit="cm",
-        category="Tracking Solaire",
-        i18n={
-            'en': "Maximum Cable Length",
-            'fr': "Longueur maximale des câbles"
-        }
-    ),
-    'maxDifference': AttributeConfig(
-        default=50,
-        type=float,
-        min=20,
-        max=100,
-        user_label="Différence maximale entre câbles",
-        description="Différence maximale autorisée entre les longueurs de câbles",
-        unit="cm",
-        category="Tracking Solaire",
-        i18n={
-            'en': "Maximum Cable Difference",
-            'fr': "Différence maximale entre câbles"
-        }
-    ),
     # Système PV
     'trackingFactor': AttributeConfig(
         default=1.3,
@@ -667,6 +582,20 @@ ATTRIBUTE_CONFIGS = {
         i18n={
             'en': "PV System Losses",
             'fr': "Pertes système PV"
+        }
+    ),
+    'bonus_tracking': AttributeConfig(
+        default=30.0,
+        type=float,
+        min=0.0,
+        max=50.0,
+        user_label="Bonus tracking",
+        description="Pourcentage de gain de production grâce au système de tracking solaire",
+        unit="%",
+        category="Énergie PV",
+        i18n={
+            'en': "Tracking Bonus",
+            'fr': "Bonus tracking"
         }
     )
 }
